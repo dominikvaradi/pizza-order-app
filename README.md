@@ -1,5 +1,7 @@
 # Pizzarendelő webalkalmazás
 
+## [Mockupok](./MOCKUPS.md)
+
 ## Specifikáció
 
 Egy olyan pizzarendelő webalkalmazást szeretnénk készíteni, ahol az oldalra látogatók meg tudják tekinteni a kínálatot, pizzát tudnak rendelni kizárólag házhozszállítással.
