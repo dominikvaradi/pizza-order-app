@@ -1,0 +1,61 @@
+<div class="container">
+	<div class="row">
+		<div class="col-12 text-center">
+			<h1 class="display-1">Felhasználók</h1>
+		</div>
+	</div>
+
+	<div class="row justify-content-center">
+		<div class="col-12 col-lg-10 col-xl-9">
+			<div class="table-responsive-sm">
+				<table class="table table-light table-striped table-hover">
+					<thead class="table-info">
+						<tr>
+							<th role="col" class="min-width-cell">#</th>
+							<th role="col" class="min-width-cell">Felhasználónév</th>
+							<th role="col" class="min-width-cell d-none d-md-table-cell">
+								Teljes név
+							</th>
+							<th role="col" class="d-none d-md-table-cell">E-Mail cím</th>
+							<th role="col" class="min-width-cell d-none d-lg-table-cell">
+								Telefonszám
+							</th>
+							<th role="col" class="min-width-cell">Csoport</th>
+							<th role="col"></th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr *ngFor="let user of visibleUsers">
+							<th role="row" class="min-width-cell">{{ user.id }}</th>
+							<td class="text-break">{{ user.username }}</td>
+							<td class="text-break d-none d-md-table-cell">
+								{{ user.fullName }}
+							</td>
+							<td class="d-none d-md-table-cell text-break">{{ user.email }}</td>
+							<td class="d-none d-lg-table-cell">{{ user.phoneNumber }}</td>
+							<td class="min-width-cell">{{ user.group }}</td>
+							<td class="min-width-cell">
+								<a [routerLink]="['/user', user.id]">Részletek</a>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div class="d-flex p-2 justify-content-center">
+				<ngb-pagination
+					[collectionSize]="collectionSize"
+					[(page)]="page"
+					[maxSize]="5"
+					[rotate]="true"
+					[directionLinks]="false"
+					[ellipses]="false"
+					[boundaryLinks]="true"
+					[pageSize]="userCountPerPage"
+					(pageChange)="refreshUsers()"
+				>
+				</ngb-pagination>
+			</div>
+		</div>
+	</div>
+</div>

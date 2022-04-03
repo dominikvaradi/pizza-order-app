@@ -1,0 +1,83 @@
+<nav class="navbar navbar-expand-sm navbar-dark bg-dark">
+	<div class="container-fluid">
+		<span class="navbar-brand">{{ title }}</span>
+
+		<button class="navbar-toggler" type="button" (click)="toggleCollapse()">
+			<span>&#9776;</span>
+		</button>
+
+		<div [ngbCollapse]="isMenuCollapsed" class="collapse navbar-collapse">
+			<ul ngbNav #nav="ngbNav" [roles]="false" class="navbar-nav w-100">
+				<li ngbNavItem>
+					<a ngbNavLink [routerLink]="['/']" (click)="collapseMenu()">Főoldal</a>
+				</li>
+
+				<li ngbNavItem>
+					<a ngbNavLink [routerLink]="['/user/1/orders']" (click)="collapseMenu()"
+						>Rendeléseim</a
+					>
+				</li>
+
+				<li ngbNavItem>
+					<a ngbNavLink [routerLink]="['/user/1']" (click)="collapseMenu()"
+						>Profilom</a
+					>
+				</li>
+
+				<li ngbNavItem>
+					<a
+						ngbNavLink
+						[routerLink]="['/orders/active']"
+						(click)="collapseMenu()"
+						class="active-orders-link"
+						>Aktív rendelések</a
+					>
+				</li>
+
+				<li ngbNavItem>
+					<a ngbNavLink [routerLink]="['/orders']" (click)="collapseMenu()"
+						>Rendelések</a
+					>
+				</li>
+
+				<li ngbNavItem>
+					<a ngbNavLink [routerLink]="['/menu']" (click)="collapseMenu()">Menü</a>
+				</li>
+
+				<li ngbNavItem>
+					<a ngbNavLink [routerLink]="['/users']" (click)="collapseMenu()"
+						>Felhasználók</a
+					>
+				</li>
+
+				<div class="d-sm-flex ms-sm-auto">
+					<li ngbNavItem>
+						<a ngbNavLink [routerLink]="['/register']" (click)="collapseMenu()"
+							>Regisztráció</a
+						>
+					</li>
+
+					<li ngbNavItem>
+						<a ngbNavLink [routerLink]="['/login']" (click)="collapseMenu()"
+							>Bejelentkezés</a
+						>
+					</li>
+
+					<li ngbNavItem>
+						<a ngbNavLink [routerLink]="['/logout']" (click)="collapseMenu()"
+							>Kijelentkezés</a
+						>
+					</li>
+
+					<li ngbNavItem>
+						<a ngbNavLink [routerLink]="['/order-cart']" (click)="collapseMenu()"
+							>Kosár (0)</a
+						>
+					</li>
+				</div>
+			</ul>
+		</div>
+	</div>
+</nav>
+
+<router-outlet></router-outlet>

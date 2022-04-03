@@ -1,0 +1,48 @@
+<div class="container">
+	<div class="row mb-3">
+		<div class="col-12 text-center">
+			<h1 class="display-1">Pizzák</h1>
+		</div>
+	</div>
+	<div class="row">
+		<div
+			*ngFor="let pizza of pizzas"
+			class="col-12 col-md-6 col-lg-4 col-xxl-3 mb-3"
+		>
+			<div class="card bg-light">
+				<img
+					src="{{ pizza.imageUrl }}"
+					class="card-img-top"
+					alt="Pizza Cover Photo"
+				/>
+				<div class="card-body">
+					<h5 class="card-title">{{ pizza.name }}</h5>
+					<h6 class="card-subtitle text-muted fst-italic mb-2">{{ pizza.price }} Ft</h6>
+					<p class="card-text">{{ pizza.description }}</p>
+				</div>
+
+				<div class="card-footer">
+					<form (keydown.enter)="$event.preventDefault()">
+						<div class="input-group ms-auto to-cart">
+							<input
+								id="amount"
+								#amount
+								type="number"
+								value="1"
+								class="form-control pe-1 border-primary"
+								min="1"
+							/>
+							<button
+								type="button"
+								class="btn btn-primary"
+								(click)="addToCart(pizza.id, parseNumber(amount.value))"
+							>
+								Kosárba
+							</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

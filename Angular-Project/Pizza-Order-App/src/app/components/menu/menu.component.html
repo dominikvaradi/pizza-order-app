@@ -1,0 +1,45 @@
+<div class="container">
+	<div class="row mb-3">
+		<div class="col-12 text-center">
+			<h1 class="display-1">Pizzák</h1>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-12 mb-3">
+			<button type="button" (click)="openEditPizzaModal()" class="btn btn-primary">
+				Új pizza létrehozása
+			</button>
+		</div>
+
+		<div
+			*ngFor="let pizza of pizzas; let idx = index"
+			class="col-12 col-md-6 col-lg-4 col-xxl-3 mb-3"
+		>
+			<div class="card bg-light">
+				<img
+					src="{{ pizza.imageUrl }}"
+					class="card-img-top"
+					alt="Pizza Cover Photo"
+				/>
+				<div class="card-body">
+					<h5 class="card-title">{{ pizza.name }}</h5>
+					<h6 class="card-subtitle text-muted fst-italic mb-2">{{ pizza.price }} Ft</h6>
+					<p class="card-text">{{ pizza.description }}</p>
+				</div>
+
+				<div class="card-footer text-center">
+					<button (click)="openEditPizzaModal(idx)" class="btn btn-warning me-2">
+						Szerkesztés
+					</button>
+					<button
+						type="button"
+						(click)="deletePizza(pizza.id)"
+						class="btn btn-danger"
+					>
+						Törlés
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
