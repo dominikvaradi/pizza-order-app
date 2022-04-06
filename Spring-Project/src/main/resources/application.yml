@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: jdbc:sqlserver://localhost\SQLEXPRESS;database=pizza-order-app;encrypt=true;trustServerCertificate=true
+    username: sa
+    password: sqlexpress
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.SQLServer2012Dialect
+        globally_quoted_identifiers: true
+        use_nationalized_character_data: true
