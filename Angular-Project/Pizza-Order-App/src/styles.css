@@ -1,0 +1,31 @@
+.toggle-visibility-button {
+	cursor: pointer;
+}
+
+.min-width-cell {
+	width: 1px;
+	white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+	.min-width-cell {
+		width: 1px;
+		white-space: break-spaces;
+	}
+}
+
+.mw-100px {
+	min-width: 100px;
+}
+
+/* Chrome, Safari, Edge, Opera */
+input.number-without-spinner::-webkit-outer-spin-button,
+input.number-without-spinner::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+
+/* Firefox */
+input[type="number"].number-without-spinner {
+	-moz-appearance: textfield;
+}

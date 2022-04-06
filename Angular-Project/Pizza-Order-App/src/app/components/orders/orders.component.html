@@ -1,0 +1,66 @@
+<div class="container">
+	<div class="row">
+		<div class="col-12 text-center">
+			<h1 class="display-1">Rendelések</h1>
+		</div>
+	</div>
+
+	<div class="row justify-content-center">
+		<div class="col-12 col-lg-10 col-xl-8">
+			<div class="table-responsive-sm">
+				<table class="table table-light table-striped table-hover align-middle">
+					<thead class="table-info">
+						<tr>
+							<th scope="col" class="text-center min-width-cell">#</th>
+							<th scope="col" class="min-width-cell">Dátum</th>
+							<th scope="col">Cím</th>
+							<th
+								scope="col"
+								class="text-center min-width-cell d-none d-sm-table-cell"
+							>
+								Összeg
+							</th>
+							<th
+								scope="col"
+								class="text-center min-width-cell d-none d-sm-table-cell"
+							>
+								Állapot
+							</th>
+							<th scope="col" class="text-center min-width-cell"></th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr *ngFor="let order of visibleOrders">
+							<th scope="row" class="text-center min-width-cell">{{ order.id }}</th>
+							<td class="min-width-cell">{{ order.date }}</td>
+							<td>{{ order.address }}</td>
+							<td class="text-center text-break d-none d-sm-table-cell">
+								{{ order.total }} Ft
+							</td>
+							<td class="text-center min-width-cell d-none d-sm-table-cell">
+								{{ order.status }}
+							</td>
+							<td class="text-center min-width-cell">
+								<a [routerLink]="['/order', order.id]">Részletek</a>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<div class="d-flex p-2 justify-content-center">
+				<ngb-pagination
+					[collectionSize]="collectionSize"
+					[(page)]="page"
+					[maxSize]="5"
+					[rotate]="true"
+					[directionLinks]="false"
+					[ellipses]="false"
+					[boundaryLinks]="true"
+					[pageSize]="orderCountPerPage"
+					(pageChange)="refreshOrders()"
+				>
+				</ngb-pagination>
+			</div>
+		</div>
+	</div>
+</div>

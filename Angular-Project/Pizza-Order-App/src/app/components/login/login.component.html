@@ -1,0 +1,95 @@
+<div class="container">
+	<div class="row mb-3">
+		<div class="col-12 text-center">
+			<h1 class="display-1">Bejelentkezés</h1>
+		</div>
+	</div>
+
+	<div class="row justify-content-center">
+		<div class="col-12 col-md-8 col-lg-6 col-xl-5">
+			<div class="container-fluid">
+				<form [formGroup]="loginForm" novalidate (ngSubmit)="onSubmit()">
+					<div class="row g-3 justify-content-center">
+						<!-- Username -->
+						<div class="col-12">
+							<div class="form-floating">
+								<input
+									type="text"
+									id="inputUsername"
+									formControlName="username"
+									placeholder="Felhasználónév"
+									class="form-control"
+									[ngClass]="{
+										'is-valid': username?.dirty && username?.valid,
+										'is-invalid': username?.dirty && username?.invalid
+									}"
+								/>
+								<label for="inputUsername">Felhasználónév</label>
+							</div>
+
+							<!-- Errors -->
+							<ngb-alert
+								[dismissible]="false"
+								type="danger"
+								*ngIf="username?.dirty && username?.invalid"
+							>
+								<p *ngIf="username?.errors?.['required']">
+									A felhasználónév mező nem lehet üres!
+								</p>
+							</ngb-alert>
+						</div>
+
+						<!-- Password -->
+						<div class="col-12">
+							<div class="input-group">
+								<div class="form-floating flex-grow-1">
+									<input
+										[type]="isPasswordFieldHidden ? 'password' : 'text'"
+										id="inputPassword"
+										formControlName="password"
+										placeholder="Jelszó"
+										class="form-control rounded-0 rounded-start"
+										[ngClass]="{
+											'is-valid': password?.dirty && password?.valid,
+											'is-invalid': password?.dirty && password?.invalid
+										}"
+									/>
+									<label for="inputPassword">Jelszó</label>
+								</div>
+								<span
+									class="input-group-text rounded-0 rounded-end toggle-visibility-button"
+									(click)="isPasswordFieldHidden = !isPasswordFieldHidden"
+									><fa-icon
+										[icon]="isPasswordFieldHidden ? faEyeIcon : faEyeSlashIcon"
+									></fa-icon
+								></span>
+							</div>
+
+							<!-- Errors -->
+							<ngb-alert
+								[dismissible]="false"
+								type="danger"
+								*ngIf="password?.dirty && password?.invalid"
+							>
+								<p *ngIf="password?.errors?.['required']">
+									A jelszó mező nem lehet üres!
+								</p>
+							</ngb-alert>
+						</div>
+
+						<!-- Submit button -->
+						<div class="col-12 text-center">
+							<button
+								type="submit"
+								[disabled]="loginForm.invalid"
+								class="btn btn-lg btn-primary"
+							>
+								Bejelentkezés
+							</button>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
