@@ -1,8 +1,9 @@
 package hu.dominikvaradi.pizzaorderapp.service;
 
+import hu.dominikvaradi.pizzaorderapp.data.dto.address.AddressCreateRequestDTO;
+import hu.dominikvaradi.pizzaorderapp.data.dto.address.AddressEditRequestDTO;
 import hu.dominikvaradi.pizzaorderapp.data.model.Address;
 import hu.dominikvaradi.pizzaorderapp.data.model.User;
-import hu.dominikvaradi.pizzaorderapp.data.model.dto.address.AddressSaveRequestDTO;
 import hu.dominikvaradi.pizzaorderapp.data.repository.AddressRepository;
 import hu.dominikvaradi.pizzaorderapp.data.repository.UserRepository;
 import hu.dominikvaradi.pizzaorderapp.service.exception.BadRequestException;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Transactional
 @Service
@@ -28,28 +30,30 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     public void deleteAddressById(long addressId) throws NotFoundException {
-        if (addressRepository.existsById(addressId)) {
-            addressRepository.deleteById(addressId);
+        Optional<Address> addressToDelete = addressRepository.findById(addressId);
+        if (addressToDelete.isPresent()) {
+            User user = addressToDelete.get().getUser();
+            user.getAddresses().remove(addressToDelete.get());
+            userRepository.save(user);
         } else {
             throw new NotFoundException("Address with given id has not found! (id = " + addressId + ")");
         }
     }
 
     @Override
-    public void editAddressById(long addressId, AddressSaveRequestDTO address) throws BadRequestException, NotFoundException {
+    public Address editAddressById(long addressId, AddressEditRequestDTO address) throws BadRequestException, NotFoundException {
         if (addressId != address.getId()) {
             throw new BadRequestException("Address's id is not the same as the path id!");
         }
 
-        Address addressToEdit = addressRepository.findById(addressId)
-            .orElseThrow(() -> new NotFoundException("Address with given id has not found! (id = " + addressId + ")"));
+        Address addressToEdit = getAddressById(addressId);
 
-        addressToEdit.setZipCode(addressToEdit.getZipCode());
+        addressToEdit.setZipCode(address.getZipCode());
         addressToEdit.setCity(address.getCity());
-        addressToEdit.setHouseNumber(addressToEdit.getHouseNumber());
-        addressToEdit.setStreet(addressToEdit.getStreet());
+        addressToEdit.setHouseNumber(address.getHouseNumber());
+        addressToEdit.setStreet(address.getStreet());
 
-        addressRepository.save(addressToEdit);
+        return addressRepository.save(addressToEdit);
     }
 
     @Override
@@ -59,7 +63,7 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
-    public Address createNewAddress(long userId, AddressSaveRequestDTO address) throws NotFoundException, BadRequestException {
+    public Address createNewAddress(long userId, AddressCreateRequestDTO address) throws NotFoundException, BadRequestException {
         if (address.getUserId() != userId) {
             throw new BadRequestException("Address's userId is not the same as the path userId!");
         }
@@ -76,9 +80,7 @@ public class AddressServiceImpl implements AddressService {
         Address newAddress = new Address(address.getZipCode(), address.getCity(), address.getStreet(), address.getHouseNumber(), user);
         addressList.add(newAddress);
 
-        userRepository.save(user);
-
-        return newAddress;
+        return addressRepository.save(newAddress);
     }
 
     @Override

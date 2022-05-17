@@ -1,0 +1,157 @@
+<div>
+	<div class="modal-header">
+		<h4 class="modal-title">{{ title }}</h4>
+		<button
+			type="button"
+			class="btn-close"
+			aria-label="Close button"
+			aria-describedby="modal-title"
+			(click)="closeModal()"
+		></button>
+	</div>
+
+	<form [formGroup]="savePizzaForm" (ngSubmit)="onSubmit()">
+		<div class="modal-body bg-light">
+			<div class="container-fluid">
+				<div class="row g-3">
+					<!-- Name -->
+					<div class="col-12">
+						<div class="form-floating">
+							<input
+								formControlName="name"
+								id="inputName"
+								type="text"
+								class="form-control"
+								placeholder="Név"
+								[ngClass]="{
+									'is-valid': name?.dirty && name?.valid,
+									'is-invalid': name?.dirty && name?.invalid
+								}"
+							/>
+							<label for="inputName">Név</label>
+						</div>
+
+						<!-- Errors -->
+						<ngb-alert
+							[dismissible]="false"
+							type="danger"
+							*ngIf="name?.dirty && name?.invalid"
+						>
+							<p *ngIf="name?.errors?.['required']">A pizza nevét kötelező megadni!</p>
+						</ngb-alert>
+					</div>
+
+					<!-- Description -->
+					<div class="col-12">
+						<div class="form-floating">
+							<textarea
+								formControlName="description"
+								id="inputDescription"
+								class="form-control"
+								placeholder="Leírás"
+								autosize
+								[ngClass]="{
+									'is-valid': description?.dirty && description?.valid,
+									'is-invalid': description?.dirty && description?.invalid
+								}"
+							>
+							</textarea>
+
+							<label for="inputDescription">Leírás</label>
+						</div>
+
+						<!-- Errors -->
+						<ngb-alert
+							[dismissible]="false"
+							type="danger"
+							*ngIf="description?.dirty && description?.invalid"
+						>
+							<p *ngIf="description?.errors?.['required']">
+								A pizza leírását kötelező megadni!
+							</p>
+						</ngb-alert>
+					</div>
+
+					<!-- Price -->
+					<div class="col-12">
+						<div class="form-floating">
+							<input
+								formControlName="price"
+								id="inputPrice"
+								type="number"
+								class="form-control number-without-spinner"
+								placeholder="Ár"
+								autosize
+								[ngClass]="{
+									'is-valid': price?.dirty && price?.valid,
+									'is-invalid': price?.dirty && price?.invalid
+								}"
+							/>
+
+							<label for="inputPrice">Ár</label>
+						</div>
+
+						<!-- Errors -->
+						<ngb-alert
+							[dismissible]="false"
+							type="danger"
+							*ngIf="price?.dirty && price?.invalid"
+						>
+							<p *ngIf="price?.errors?.['required']">A pizza árát kötelező megadni!</p>
+
+							<p *ngIf="price?.errors?.['pattern']">
+								A mezőnek egy nullánál nagyobb, pozitív egész számot kell tartalmaznia.
+							</p>
+						</ngb-alert>
+					</div>
+
+					<!-- Image File -->
+					<div class="col-12">
+						<input
+							id="inputImage"
+							type="file"
+							class="form-control"
+							placeholder="Kép"
+							accept="image/*"
+							(change)="onFileChange($event)"
+							[ngClass]="{
+								'is-valid': image?.dirty && image?.valid,
+								'is-invalid': image?.dirty && image?.invalid
+							}"
+						/>
+
+						<!-- Errors -->
+						<ngb-alert
+							[dismissible]="false"
+							type="danger"
+							*ngIf="image?.dirty && image?.invalid"
+						>
+							<p *ngIf="image?.errors?.['required']">
+								A pizzához kötelező képet feltölteni!
+							</p>
+						</ngb-alert>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="modal-footer">
+			<button
+				type="submit"
+				[disabled]="savePizzaForm.invalid || ((!pizza || (!file && !savePizzaForm.dirty)) && (pizza || !file)) || isLoading"
+				class="btn btn-outline-success"
+			>
+				<span *ngIf="isLoading" class="spinner-border spinner-border-sm text-danger "></span>
+				{{ submitButtonTitle }}
+			</button>
+
+			<button
+				type="button"
+				ngbAutofocus
+				class="btn btn-outline-danger"
+				(click)="closeModal()"
+			>
+				Bezárás
+			</button>
+		</div>
+	</form>
+</div>

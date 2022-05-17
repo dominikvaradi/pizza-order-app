@@ -1,55 +1,97 @@
-import { Component, OnInit } from '@angular/core';
-import { Address } from 'src/app/models/Address';
-import { Order } from 'src/app/models/Order';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { AddressResponse, addressToString } from 'src/app/models/AddressResponse';
+import { OrderResponse } from 'src/app/models/OrderResponse';
+import { UserResponse } from 'src/app/models/UserResponse';
+import { UserDetailsStorageService } from 'src/app/services/auth/user-details-storage.service';
+import { OrderService } from 'src/app/services/order/order.service';
 
 @Component({
   selector: 'app-orders',
   templateUrl: './orders.component.html',
   styleUrls: ['./orders.component.css']
 })
-export class OrdersComponent implements OnInit {
-	ORDERS!: Order[];
-
+export class OrdersComponent implements OnInit, OnDestroy {
+	orders: OrderResponse[] = [];
 	page: number = 1;
-	orderCountPerPage: number = 10;
-	collectionSize!: number;
-	visibleOrders!: Order[];
+	pageSize: number = 10;
+	collectionSize: number = 0;
+	term: string = "";
 
-	constructor() {}
+	loggedInUser!: UserResponse;
+
+	subscriptionList: Subscription[] = [];
+
+	isLoading: boolean = true;
+
+	constructor(private orderService: OrderService,
+		private router: Router,
+		private userDetailsStorageService: UserDetailsStorageService) {}
 
 	ngOnInit(): void {
-		this.ORDERS = [];
-		for (let i: number = 1; i < 406; ++i) {
-			this.ORDERS.push(this.createRandomOrder(i));
+		const user = this.userDetailsStorageService.getUser();
+		if (!this.userDetailsStorageService.isUserLoggedIn() || user === null) {
+			this.router.navigate(['login']);
+			return;
 		}
+		this.loggedInUser = user;
 
-		this.collectionSize = this.ORDERS.length;
-
-		this.refreshOrders();
+		this.refreshOrderPage();
 	}
 
-	refreshOrders() {
-		this.visibleOrders = this.ORDERS.slice(
-			(this.page - 1) * this.orderCountPerPage,
-			(this.page - 1) * this.orderCountPerPage + this.orderCountPerPage
+	ngOnDestroy(): void {
+		this.subscriptionList.forEach((subscription) => subscription.unsubscribe());
+	}
+
+	private getOrders(page: number, pageSize: number, term: string) {
+		this.isLoading = true;
+
+		this.subscriptionList.push(
+			this.orderService
+				.getOrdersPaginated(page - 1, pageSize, false, false, term)
+				.subscribe({
+					next: (result) => {
+						this.orders = result.content;
+						this.collectionSize = result.totalElements;
+						this.isLoading = false;
+					},
+					error: (error) => {
+						this.orders = [];
+						this.isLoading = false;
+					},
+				})
 		);
 	}
 
-	// TODO törölni, serviceből lekérdezni
-	private createRandomOrder(id: number): Order {
-		return new Order(
-			id,
-			'2022.' +
-				('0' + Math.floor(((Math.random() * 100) % 12) + 1)).slice(-2) +
-				'.' +
-				('0' + Math.floor((Math.random() * 100) % 29) + 1).slice(-2) +
-				'. ' +
-				('0' + Math.floor((Math.random() * 100) % 24)).slice(-2) +
-				':' +
-				('0' + Math.floor((Math.random() * 100) % 60)).slice(-2),
-			new Address(NaN, 1116, 'Budapest', 'Csabai kapu', '78'),
-			Math.floor((Math.random() * 10000 * id) % 10000),
-			'Teljesítve'
-		);
+	searchOrdersByUsername(searchTerm: string) {
+		this.page = 1;
+		this.term = searchTerm;
+		this.refreshOrderPage();
+	}
+
+	getReadableOrderStatusName(name: string): string {
+		switch (name) {
+			case 'STATUS_UNDER_PROCESS':
+				return 'Feldolgozás alatt';
+			case 'STATUS_UNDER_PREPARATION':
+				return 'Elkészítés alatt';
+			case 'STATUS_UNDER_DELIVER':
+				return 'Kiszállítás alatt';
+			case 'STATUS_COMPLETED':
+				return 'Teljesítve';
+			case 'STATUS_REVOKED':
+				return 'Visszavonva';
+			default:
+				return 'NOT_FOUND';
+		}
+	}
+
+	addressToString(address: AddressResponse): string {
+		return addressToString(address);
+	}
+
+	refreshOrderPage() {
+		this.getOrders(this.page, this.pageSize, this.term);
 	}
 }

@@ -1,60 +1,104 @@
-import { Component, OnInit } from '@angular/core';
-import { IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { FaIconLibrary } from '@fortawesome/angular-fontawesome';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
-import { Pizza } from 'src/app/models/Pizza';
+import { Subscription } from 'rxjs';
+import { CartItemResponse } from 'src/app/models/CartItemResponse';
+import { EventData } from 'src/app/models/EventData';
+import { UserResponse } from 'src/app/models/UserResponse';
+import { UserDetailsStorageService } from 'src/app/services/auth/user-details-storage.service';
+import { CartService } from 'src/app/services/cart/cart.service';
+import { EventBusService } from 'src/app/services/event-bus/event-bus.service';
 
 @Component({
 	selector: 'app-order-cart',
 	templateUrl: './order-cart.component.html',
 	styleUrls: ['./order-cart.component.css'],
 })
-export class OrderCartComponent implements OnInit {
-	pizzas: Pizza[] = [
-		new Pizza(
-			1,
-			'Margherita',
-			'Paradicsomszósz, Mozzarella sajt, Paradicsom karika, Bazsalikom',
-			'assets/margherita.jpg',
-			2000
-		),
-		new Pizza(
-			2,
-			'Margherita',
-			'Paradicsomszósz, Mozzarella sajt, Paradicsom karika, Bazsalikom',
-			'assets/margherita.jpg',
-			2000
-		),
-		new Pizza(
-			3,
-			'Margherita',
-			'Paradicsomszósz, Mozzarella sajt, Paradicsom karika, Bazsalikom',
-			'assets/margherita.jpg',
-			2000
-		),
-	];
+export class OrderCartComponent implements OnInit, OnDestroy {
+	cartItems: CartItemResponse[] = [];
 
-	faTrashIcon: IconDefinition = faTrash;
+	subscriptionList: Subscription[] = [];
 
-	constructor() {}
+	loggedInUser!: UserResponse;
 
-	ngOnInit(): void {}
+	isLoading: boolean = true;
 
-	sumOfPizzaPrices(): number {
-		let sum: number = 0;
-		this.pizzas.forEach((pizza) => {
-			sum += pizza.price;
-		});
-
-		return sum;
+	constructor(
+		iconLibrary: FaIconLibrary,
+		private cartService: CartService,
+		private userDetailsStorageService: UserDetailsStorageService,
+		private eventBusService: EventBusService,
+		private router: Router
+	) {
+		iconLibrary.addIcons(faTrash);
 	}
 
-	removePizzaFromCart(pizzaId: number) {
-		// TODO törlés service async
-		console.log('removePizzaFromCart: ' + pizzaId);
+	ngOnDestroy(): void {
+		this.subscriptionList.forEach((subscription) => subscription.unsubscribe());
+	}
+
+	ngOnInit(): void {
+		const user = this.userDetailsStorageService.getUser();
+		if (!this.userDetailsStorageService.isUserLoggedIn() || user === null) {
+			this.router.navigate(['login']);
+			return;
+		}
+		this.loggedInUser = user;
+
+		this.getCartItems();
+	}
+
+	private getCartItems() {
+		this.isLoading = true;
+		
+		this.subscriptionList.push(
+			this.cartService.getCartItemsByUserId(this.loggedInUser.id).subscribe({
+				next: (result: CartItemResponse[]) => {
+					this.cartItems = result;
+					this.isLoading = false;
+				},
+				error: (error) => {
+					this.cartItems = [];
+					this.isLoading = false;
+				},
+			})
+		);
+	}
+
+	removePizzaFromCart(cartItemId: number) {
+		this.subscriptionList.push(
+			this.cartService
+				.removeItemFromCart(this.loggedInUser.id, cartItemId)
+				.subscribe({
+					next: (result) => {
+						this.cartItems = this.cartItems.filter(
+							(cartItem) => cartItem.id != cartItemId
+						);
+						this.eventBusService.emit(new EventData('cart-refresh-size', null));
+					},
+				})
+		);
 	}
 
 	dumpCart() {
-		// TODO törlés service async
-		console.log('dumpCart()');
+		this.subscriptionList.push(
+			this.cartService.dumpItemsFromCartByUserId(this.loggedInUser.id).subscribe({
+				next: (result) => {
+					this.cartItems = [];
+					this.eventBusService.emit(new EventData('cart-refresh-size', null));
+				},
+			})
+		);
+	}
+
+	sumOfPizzaPrices(): number {
+		let sum: number = 0;
+
+		this.cartItems.forEach((cartItem) => {
+			sum += cartItem.pizza.price * cartItem.amount;
+		});
+
+		return sum;
 	}
 }

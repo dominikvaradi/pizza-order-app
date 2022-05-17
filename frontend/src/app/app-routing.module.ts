@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { ActiveOrdersComponent } from './components/active-orders/active-orders.component';
+
 import { HomeComponent } from './components/home/home.component';
 import { LoginComponent } from './components/login/login.component';
 import { MenuComponent } from './components/menu/menu.component';
@@ -18,16 +19,17 @@ const routes: Routes = [
 	{ path: '', component: HomeComponent },
 	{ path: 'login', component: LoginComponent },
 	{ path: 'register', component: RegisterComponent },
-	{ path: 'user/:id/orders', component: UserOrdersComponent },
-	{ path: 'order/:id', component: OrderComponent },
-	{ path: 'user/:id', component: UserComponent },
+	{ path: 'user/:userId/orders', component: UserOrdersComponent },
+	{ path: 'order/:orderId', component: OrderComponent },
+	{ path: 'user/:userId', component: UserComponent },
 	{ path: 'order-cart', component: OrderCartComponent },
 	{ path: 'order-finalize', component: OrderFinalizeComponent },
 	{ path: 'orders', component: OrdersComponent },
+	{ path: 'orders/active', component: ActiveOrdersComponent },
 	{ path: 'menu', component: MenuComponent },
 	{ path: 'users', component: UsersComponent },
-	{ path: 'orders/active', component: ActiveOrdersComponent },
-	{ path: '**', component: PageNotFoundComponent },
+	{ path: 'not-found', component: PageNotFoundComponent },
+	{ path: '**', redirectTo: 'not-found' },
 ];
 
 @NgModule({

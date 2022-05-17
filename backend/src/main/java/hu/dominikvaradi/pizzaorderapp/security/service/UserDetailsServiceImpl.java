@@ -21,7 +21,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         try {
             User user = userService.findUserByUsername(username);
 
-            return UserDetailsImpl.build(user);
+            return new UserDetailsImpl(user);
         } catch (NotFoundException e) {
             throw new UsernameNotFoundException(e.getMessage());
         }

@@ -1,6 +1,6 @@
 package hu.dominikvaradi.pizzaorderapp.service.exception;
 
-import hu.dominikvaradi.pizzaorderapp.data.model.dto.MessageResponseDTO;
+import hu.dominikvaradi.pizzaorderapp.data.dto.MessageResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;

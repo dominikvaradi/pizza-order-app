@@ -3,35 +3,88 @@
 		<div class="col-12 text-center">
 			<h1 class="display-1">Aktív rendelések</h1>
 		</div>
+
+		<div
+			*ngIf="!isOrdersLoading && orders.length > 0"
+			class="d-flex p-2 justify-content-center"
+		>
+			<ngb-pagination
+				[collectionSize]="collectionSize"
+				[(page)]="page"
+				[maxSize]="5"
+				[rotate]="true"
+				[directionLinks]="false"
+				[ellipses]="false"
+				[boundaryLinks]="true"
+				[pageSize]="pageSize"
+				(pageChange)="refreshOrderPage()"
+			>
+			</ngb-pagination>
+		</div>
+
+		<div *ngIf="isOrdersLoading" class="col-12 text-center mt-3">
+			<div class="spinner-border text-danger" style="width: 3rem; height: 3rem">
+				<span class="visually-hidden">Betöltés...</span>
+			</div>
+		</div>
+	</div>
+
+	<div *ngIf="!isOrdersLoading && orders.length == 0" class="row">
+		<div class="col-12 text-center">
+			<p>Jelenleg nincsen egyetlen aktív rendelés sem.</p>
+		</div>
 	</div>
 
 	<div
-		class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 row-cols-xxl-6 g-4 justify-content-center"
+		*ngIf="!isOrdersLoading"
+		class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 row-cols-xxl-6 g-4 justify-content-center"
 	>
-		<div *ngFor="let order of activeOrders" class="col">
+		<div *ngFor="let order of orders; let idx = index" class="col">
 			<div class="card bg-light h-100">
 				<div class="card-body">
-					<h5 class="card-title text-center">#{{ order.order.id }}</h5>
+					<h5 class="card-title text-center">#{{ order.id }}</h5>
 					<h6 class="card-subtitle text-muted mb-2 text-center">
-						{{ order.order.address }}
+						{{ addressToString(order.address) }}
 					</h6>
 					<p class="card-text text-center mb-2">
 						<span class="fw-bold">Eltelt idő:</span>
-						{{ getElapsedTime(order.order.date) }} perc
+						{{ getElapsedMinutes(order.createdAt) }} perc
 					</p>
 					<p
 						class="card-text text-center text-warning border-bottom border-dark pb-1 mb-2"
 					>
-						{{ order.order.status }}
+						{{ getReadableOrderStatusName(order.orderStatusName) }}
 					</p>
 
 					<ul class="card-text">
-						<li *ngFor="let pizza of order.pizzas">{{ pizza.name }}</li>
+						<li *ngFor="let orderItem of order.items">
+							{{ orderItem.pizza.name }}: <span>{{ orderItem.amount }} db</span>
+						</li>
 					</ul>
 				</div>
 
 				<div class="card-footer text-center">
-					<button type="button" class="btn btn-primary">Állapot módosítása</button>
+					<!-- <button type="button" class="btn btn-primary" (click)="editStatus(idx)">Állapot módosítása</button> -->
+					<div ngbDropdown class="d-inline-block">
+						<button
+							type="button"
+							class="btn btn-sm btn-primary"
+							id="dropdownOrderStatusEdit{{ order.id }}"
+							ngbDropdownToggle
+						>
+							Állapot módosítása
+						</button>
+						<div ngbDropdownMenu>
+							<button
+								ngbDropdownItem
+								*ngFor="let orderStatus of orderStatuses"
+								(click)="editStatus(idx, orderStatus.id)"
+								[disabled]="orderStatus.name === order.orderStatusName"
+							>
+								{{ getReadableOrderStatusName(orderStatus.name) }}
+							</button>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>

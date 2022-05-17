@@ -1,78 +1,170 @@
-<nav class="navbar navbar-expand-sm navbar-dark bg-dark">
+<nav
+	class="navbar navbar-dark bg-dark"
+	[ngClass]="{
+		'navbar-expand-sm': !isUserLoggedIn(),
+		'navbar-expand-md': isUserLoggedIn() && !isUserManager() && !isUserAdmin(),
+		'navbar-expand-lg': isUserManager(),
+		'navbar-expand-xl': isUserAdmin()
+	}"
+>
 	<div class="container-fluid">
 		<span class="navbar-brand">{{ title }}</span>
 
-		<button class="navbar-toggler" type="button" (click)="toggleCollapse()">
+		<button class="navbar-toggler" type="button" (click)="toggleMenuCollapse()">
 			<span>&#9776;</span>
 		</button>
 
-		<div [ngbCollapse]="isMenuCollapsed" class="collapse navbar-collapse">
-			<ul ngbNav #nav="ngbNav" [roles]="false" class="navbar-nav w-100">
-				<li ngbNavItem>
-					<a ngbNavLink [routerLink]="['/']" (click)="collapseMenu()">Főoldal</a>
-				</li>
-
-				<li ngbNavItem>
-					<a ngbNavLink [routerLink]="['/user/1/orders']" (click)="collapseMenu()"
-						>Rendeléseim</a
-					>
-				</li>
-
-				<li ngbNavItem>
-					<a ngbNavLink [routerLink]="['/user/1']" (click)="collapseMenu()"
-						>Profilom</a
-					>
-				</li>
-
-				<li ngbNavItem>
+		<div
+			[ngbCollapse]="isMenuCollapsed"
+			class="collapse navbar-collapse"
+			id="navbarNav"
+		>
+			<ul class="navbar-nav">
+				<li class="nav-item">
 					<a
-						ngbNavLink
-						[routerLink]="['/orders/active']"
+						class="nav-link"
+						[routerLinkActive]="['active']"
+						[routerLinkActiveOptions]="{ exact: true }"
+						[routerLink]="['/']"
 						(click)="collapseMenu()"
-						class="active-orders-link"
-						>Aktív rendelések</a
+						>Főoldal</a
 					>
 				</li>
 
-				<li ngbNavItem>
-					<a ngbNavLink [routerLink]="['/orders']" (click)="collapseMenu()"
-						>Rendelések</a
-					>
-				</li>
-
-				<li ngbNavItem>
-					<a ngbNavLink [routerLink]="['/menu']" (click)="collapseMenu()">Menü</a>
-				</li>
-
-				<li ngbNavItem>
-					<a ngbNavLink [routerLink]="['/users']" (click)="collapseMenu()"
-						>Felhasználók</a
-					>
-				</li>
-
-				<div class="d-sm-flex ms-sm-auto">
-					<li ngbNavItem>
-						<a ngbNavLink [routerLink]="['/register']" (click)="collapseMenu()"
-							>Regisztráció</a
+				<div
+					*ngIf="isUserLoggedIn()"
+					class="d-block"
+					[ngClass]="{
+						'd-md-flex': !isUserManager() && !isUserAdmin(),
+						'd-lg-flex': isUserManager(),
+						'd-xl-flex': isUserAdmin()
+					}"
+				>
+					<li class="nav-item">
+						<a
+							class="nav-link"
+							[routerLinkActive]="['active']"
+							[routerLinkActiveOptions]="{ exact: true }"
+							[routerLink]="['/user', loggedInUser?.id, 'orders']"
+							(click)="collapseMenu()"
+							>Rendeléseim</a
 						>
 					</li>
 
-					<li ngbNavItem>
-						<a ngbNavLink [routerLink]="['/login']" (click)="collapseMenu()"
+					<li class="nav-item">
+						<a
+							class="nav-link"
+							[routerLinkActive]="['active']"
+							[routerLinkActiveOptions]="{ exact: true }"
+							[routerLink]="['/user', loggedInUser?.id]"
+							(click)="collapseMenu()"
+							>Profilom</a
+						>
+					</li>
+
+					<li
+						*ngIf="isUserChef() || isUserManager() || isUserAdmin()"
+						class="nav-item"
+					>
+						<a
+							class="nav-link active-orders-link"
+							[routerLinkActive]="['active']"
+							[routerLinkActiveOptions]="{ exact: true }"
+							[routerLink]="['/orders', 'active']"
+							(click)="collapseMenu()"
+							>Aktív rendelések</a
+						>
+					</li>
+
+					<li *ngIf="isUserManager() || isUserAdmin()" class="nav-item">
+						<a
+							class="nav-link"
+							[routerLinkActive]="['active']"
+							[routerLinkActiveOptions]="{ exact: true }"
+							[routerLink]="['/orders']"
+							(click)="collapseMenu()"
+							>Rendelések</a
+						>
+					</li>
+
+					<li *ngIf="isUserManager() || isUserAdmin()" class="nav-item">
+						<a
+							class="nav-link"
+							[routerLinkActive]="['active']"
+							[routerLinkActiveOptions]="{ exact: true }"
+							[routerLink]="['/menu']"
+							(click)="collapseMenu()"
+							>Menü</a
+						>
+					</li>
+
+					<li *ngIf="isUserAdmin()" class="nav-item">
+						<a
+							class="nav-link"
+							[routerLinkActive]="['active']"
+							[routerLinkActiveOptions]="{ exact: true }"
+							[routerLink]="['/users']"
+							(click)="collapseMenu()"
+							>Felhasználók</a
+						>
+					</li>
+				</div>
+			</ul>
+
+			<ul class="navbar-nav ms-auto">
+				<div *ngIf="!isUserLoggedIn()" class="d-block d-sm-flex">
+					<li class="nav-item">
+						<a
+							class="nav-link"
+							[routerLinkActive]="['active']"
+							[routerLinkActiveOptions]="{ exact: true }"
+							[routerLink]="['/login']"
+							(click)="collapseMenu()"
 							>Bejelentkezés</a
 						>
 					</li>
 
-					<li ngbNavItem>
-						<a ngbNavLink [routerLink]="['/logout']" (click)="collapseMenu()"
-							>Kijelentkezés</a
+					<li class="nav-item">
+						<a
+							class="nav-link"
+							[routerLinkActive]="['active']"
+							[routerLinkActiveOptions]="{ exact: true }"
+							[routerLink]="['/register']"
+							(click)="collapseMenu()"
+							>Regisztráció</a
 						>
 					</li>
+				</div>
 
-					<li ngbNavItem>
-						<a ngbNavLink [routerLink]="['/order-cart']" (click)="collapseMenu()"
-							>Kosár (0)</a
-						>
+				<div
+					*ngIf="isUserLoggedIn()"
+					class="d-block"
+					[ngClass]="{
+						'd-md-flex': !isUserManager() && !isUserAdmin(),
+						'd-lg-flex': isUserManager(),
+						'd-xl-flex': isUserAdmin()
+					}"
+				>
+					<li class="nav-item">
+						<a
+							class="nav-link"
+							[routerLinkActive]="['active']"
+							[routerLinkActiveOptions]="{ exact: true }"
+							[routerLink]="['/order-cart']"
+							(click)="collapseMenu()"
+							><span class="position-relative pe-2"
+								>Kosár
+								<span
+									class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+								>
+									{{ cartItemCount }}
+								</span>
+							</span>
+						</a>
+					</li>
+
+					<li class="nav-item">
+						<a type="button" class="nav-link" (click)="logout()"> Kijelentkezés </a>
 					</li>
 				</div>
 			</ul>
@@ -81,3 +173,9 @@
 </nav>
 
 <router-outlet></router-outlet>
+
+<ng-template #notAuthorized>
+	<div class="col-12 text-center">
+		<p>Nincsen jogosultságod az oldal megtekintéséhez!</p>
+	</div>
+</ng-template>

@@ -9,6 +9,14 @@
 		<div class="container-fluid">
 			<div class="row justify-content-center">
 				<div class="col-12 col-lg-10 col-xl-8">
+					<div *ngIf="errorMessage" class="alert alert-danger">
+						<p class="m-0">{{ errorMessage }}</p>
+					</div>
+
+					<div *ngIf="successMessage" class="alert alert-success">
+						<p class="m-0">{{ successMessage }}</p>
+					</div>
+
 					<form [formGroup]="registerForm" novalidate (ngSubmit)="onSubmit()">
 						<div class="row g-3 justify-content-center">
 							<!-- Username -->
@@ -35,17 +43,17 @@
 									*ngIf="username?.dirty && username?.invalid"
 								>
 									<p *ngIf="username?.errors?.['required']">
-										A felhasználónév mező nem lehet üres!
+										A mező kitöltése kötelező!
 									</p>
 
 									<p *ngIf="username?.errors?.['minlength']">
-										A felhasználónévnek minimum
+										A mezőnek minimum
 										{{username?.errors?.['minlength'].requiredLength}} karaktert kell
 										tartalmaznia!
 									</p>
 
 									<p *ngIf="username?.errors?.['maxlength']">
-										A felhasználónévnek maximum
+										A mezőnek maximum
 										{{username?.errors?.['maxlength'].requiredLength}} karaktert szabad
 										tartalmaznia!
 									</p>
@@ -76,11 +84,12 @@
 									*ngIf="fullName?.dirty && fullName?.invalid"
 								>
 									<p *ngIf="fullName?.errors?.['required']">
-										A teljes név mező nem lehet üres!
+										A mező kitöltése kötelező!
 									</p>
 
-									<p *ngIf="fullName?.errors?.['pattern']">
-										A teljes név mezőnek egy érvényes magyar nevet kell tartalmaznia!
+									<p *ngIf="fullName?.errors?.['fullname']">
+										A mezőnek egy érvényes teljes nevet kell tartalmaznia! (Például: Teszt
+										Elek)
 									</p>
 								</ngb-alert>
 							</div>
@@ -108,12 +117,11 @@
 									type="danger"
 									*ngIf="email?.dirty && email?.invalid"
 								>
-									<p *ngIf="email?.errors?.['required']">
-										Az e-mail mező nem lehet üres!
-									</p>
+									<p *ngIf="email?.errors?.['required']">A mező kitöltése kötelező!</p>
 
 									<p *ngIf="email?.errors?.['email']">
-										Az e-mail mezőnek egy érvényes e-mail címet kell tartalmaznia!
+										A mezőnek egy érvényes e-mail címet kell tartalmaznia! (Például:
+										tesztelek@tesztmail.com)
 									</p>
 								</ngb-alert>
 							</div>
@@ -145,12 +153,11 @@
 									*ngIf="phoneNumber?.dirty && phoneNumber?.invalid"
 								>
 									<p *ngIf="phoneNumber?.errors?.['required']">
-										A telefonszám mező nem lehet üres!
+										A mező kitöltése kötelező!
 									</p>
 
-									<p *ngIf="phoneNumber?.errors?.['pattern']">
-										A telefonszám mezőnek egy érvényes telefonszámot kell tartalmaznia! (9
-										darab számjegy)
+									<p *ngIf="phoneNumber?.errors?.['phonenumber']">
+										A mezőnek pontosan 9 darab számot kell tartalmaznia!
 									</p>
 								</ngb-alert>
 							</div>
@@ -160,20 +167,31 @@
 								<div class="input-group">
 									<div class="form-floating flex-grow-1">
 										<input
-											[type]="isPasswordFieldHidden ? 'password' : 'text'"
+											type="password"
 											id="inputPassword"
+											#inputPassword
 											formControlName="password"
 											placeholder="Jelszó"
 											class="form-control rounded-0 rounded-start"
-											[ngClass]="{'is-valid': password?.dirty && password?.valid, 'is-invalid': (password?.dirty && password?.invalid) || (password?.dirty && passwordConfirm?.dirty && registerForm?.errors?.['matchingError'])}"
+											[ngClass]="{
+												'is-valid': password?.dirty && (password?.valid && !registerForm.errors?.['match']),
+												'is-invalid': password?.dirty && (password?.invalid || registerForm.errors?.['match'])
+											}"
 										/>
 										<label for="inputPassword">Jelszó</label>
 									</div>
 									<span
 										class="input-group-text rounded-0 rounded-end toggle-visibility-button"
-										(click)="isPasswordFieldHidden = !isPasswordFieldHidden"
+										(click)="
+											inputPassword.type =
+												inputPassword.type === 'password' ? 'text' : 'password'
+										"
 										><fa-icon
-											[icon]="isPasswordFieldHidden ? faEyeIcon : faEyeSlashIcon"
+											[icon]="
+												inputPassword.type === 'password'
+													? ['far', 'eye']
+													: ['far', 'eye-slash']
+											"
 										></fa-icon
 									></span>
 								</div>
@@ -182,24 +200,24 @@
 								<ngb-alert
 									[dismissible]="false"
 									type="danger"
-									*ngIf="password?.dirty && (password?.invalid || (passwordConfirm?.dirty && registerForm?.errors?.['matchingError']))"
+									*ngIf="password?.dirty && (password?.invalid || registerForm.errors?.['match'])"
 								>
 									<p *ngIf="password?.errors?.['required']">
-										A jelszó mező nem lehet üres!
+										A mező kitöltése kötelező!
 									</p>
 
-									<p *ngIf="password?.errors?.['pattern']">
-										A jelszó mezőnek egy érvényes jelszót kell tartalmaznia!
+									<p *ngIf="password?.errors?.['password']">
+										A mezőnek egy érvényes jelszót kell tartalmaznia!
 									</p>
-									<ul *ngIf="password?.errors?.['pattern']">
-										<li>Legalább egy nagybetű</li>
-										<li>Legalább egy kisbetű</li>
-										<li>Legalább egy szám</li>
-										<li>Legalább egy különleges karakter (#?!@$%^&*-)</li>
-										<li>Legalább 8 karakter hosszú</li>
+									<ul *ngIf="password?.errors?.['password']">
+										<li>Minimum 8 karakter</li>
+										<li>Minimum egy darab nagybetű</li>
+										<li>Minimum egy darab kisbetű</li>
+										<li>Minimum egy darab szám</li>
+										<li>Minimum egy darab speciális karakter</li>
 									</ul>
 
-									<p *ngIf="registerForm?.errors?.['matchingError']">
+									<p *ngIf="registerForm.errors?.['match']">
 										A két jelszónak meg kell egyeznie!
 									</p>
 								</ngb-alert>
@@ -210,20 +228,31 @@
 								<div class="input-group">
 									<div class="form-floating flex-grow-1">
 										<input
-											[type]="isPasswordConfirmFieldHidden ? 'password' : 'text'"
+											type="password"
 											id="inputPasswordConfirm"
+											#inputPasswordConfirm
 											formControlName="passwordConfirm"
 											placeholder="Jelszó megerősítése"
 											class="form-control rounded-0 rounded-start"
-											[ngClass]="{'is-valid': passwordConfirm?.dirty && passwordConfirm?.valid, 'is-invalid': passwordConfirm?.dirty && (passwordConfirm?.errors?.['required'] || (password?.dirty && registerForm?.errors?.['matchingError']))}"
+											[ngClass]="{
+												'is-valid': passwordConfirm?.dirty && (passwordConfirm?.valid && !registerForm.errors?.['match']),
+												'is-invalid': passwordConfirm?.dirty && (passwordConfirm?.invalid || registerForm.errors?.['match'])
+											}"
 										/>
 										<label for="inputPasswordConfirm">Jelszó megerősítése</label>
 									</div>
 									<span
 										class="input-group-text rounded-0 rounded-end toggle-visibility-button"
-										(click)="isPasswordConfirmFieldHidden = !isPasswordConfirmFieldHidden"
+										(click)="
+											inputPasswordConfirm.type =
+												inputPasswordConfirm.type === 'password' ? 'text' : 'password'
+										"
 										><fa-icon
-											[icon]="isPasswordConfirmFieldHidden ? faEyeIcon : faEyeSlashIcon"
+											[icon]="
+												inputPasswordConfirm.type === 'password'
+													? ['far', 'eye']
+													: ['far', 'eye-slash']
+											"
 										></fa-icon
 									></span>
 								</div>
@@ -232,14 +261,25 @@
 								<ngb-alert
 									[dismissible]="false"
 									type="danger"
-									*ngIf="passwordConfirm?.dirty && (passwordConfirm?.errors?.['required'] || (password?.dirty && registerForm?.errors?.['matchingError']))"
+									*ngIf="passwordConfirm?.dirty && (passwordConfirm?.invalid || registerForm.errors?.['match'])"
 								>
 									<p *ngIf="passwordConfirm?.errors?.['required']">
-										A jelszó megerősítése mező nem lehet üres!
+										A mező kitöltése kötelező!
 									</p>
 
-									<p *ngIf="registerForm?.errors?.['matchingError']">
-										A két jelszónak meg kell egyeznie!
+									<p *ngIf="passwordConfirm?.errors?.['password']">
+										A mezőnek egy érvényes jelszót kell tartalmaznia!
+									</p>
+									<ul *ngIf="passwordConfirm?.errors?.['password']">
+										<li>Minimum 8 karakter</li>
+										<li>Minimum egy darab nagybetű</li>
+										<li>Minimum egy darab kisbetű</li>
+										<li>Minimum egy darab szám</li>
+										<li>Minimum egy darab speciális karakter</li>
+									</ul>
+
+									<p *ngIf="registerForm.errors?.['match']">
+										A két jelszónak nem egyezik!
 									</p>
 								</ngb-alert>
 							</div>
@@ -247,12 +287,16 @@
 							<!-- Submit button -->
 							<div class="col-12 text-center">
 								<button
-									type="submit"
-									[disabled]="registerForm.invalid"
-									class="btn btn-lg btn-primary"
-								>
-									Regisztráció
-								</button>
+								type="submit"
+								[disabled]="registerForm.invalid || isLoading"
+								class="btn btn-lg btn-primary"
+							>
+								<span
+									*ngIf="isLoading"
+									class="spinner-border spinner-border-sm text-danger"
+								></span>
+								Regisztráció
+							</button>
 							</div>
 						</div>
 					</form>

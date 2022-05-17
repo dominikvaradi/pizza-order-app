@@ -1,77 +1,89 @@
-import { Component, OnInit } from '@angular/core';
-import { UserWithGroup } from 'src/app/models/UserWithGroup';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { UserResponse } from 'src/app/models/UserResponse';
+import { UserDetailsStorageService } from 'src/app/services/auth/user-details-storage.service';
+import { UserService } from 'src/app/services/user/user.service';
 
 @Component({
 	selector: 'app-users',
 	templateUrl: './users.component.html',
 	styleUrls: ['./users.component.css'],
 })
-export class UsersComponent implements OnInit {
-	USERS!: UserWithGroup[];
-
+export class UsersComponent implements OnInit, OnDestroy {
+	users: UserResponse[] = [];
 	page: number = 1;
-	userCountPerPage: number = 10;
-	collectionSize!: number;
-	visibleUsers!: UserWithGroup[];
+	pageSize: number = 10;
+	collectionSize: number = 0;
+	term: string = '';
 
-	constructor() {
-		this.USERS = [];
+	loggedInUser!: UserResponse;
 
-		this.USERS.push(
-			new UserWithGroup(
-				1,
-				'TesztElek15',
-				'Teszt Elek Béla',
-				'tesztelek15@tesztmail.com',
-				2663333,
-				'Szakács'
-			)
-		);
+	subscriptionList: Subscription[] = [];
 
-		this.USERS.push(
-			new UserWithGroup(
-				2,
-				'TesztPisza3',
-				'Teszt Pista',
-				'tesztpista3@tesztmail.com',
-				2664444,
-				'Admin'
-			)
-		);
+	isLoading: boolean = true;
 
-		this.USERS.push(
-			new UserWithGroup(
-				3,
-				'TesztJeno',
-				'Teszt Jenő',
-				'tesztijenci@tesztmail.com',
-				2665555,
-				'Felhasználó'
-			)
-		);
+	constructor(
+		private userService: UserService,
+		private router: Router,
+		private userDetailsStorageService: UserDetailsStorageService
+	) {}
 
-		this.USERS.push(
-			new UserWithGroup(
-				4,
-				'TesztManager20',
-				'Teszt Manager Feri',
-				'tesztmanager20@tesztmail.com',
-				2666666,
-				'Üzletvezető'
-			)
-		);
-
-		this.collectionSize = this.USERS.length;
+	ngOnInit(): void {
+		const user = this.userDetailsStorageService.getUser();
+		if (!this.userDetailsStorageService.isUserLoggedIn() || user === null) {
+			this.router.navigate(['login']);
+			return;
+		}
+		this.loggedInUser = user;
 
 		this.refreshUsers();
 	}
 
-	ngOnInit(): void {}
+	ngOnDestroy(): void {
+		this.subscriptionList.forEach((subscription) => subscription.unsubscribe());
+	}
+
+	private getUsers(page: number, pageSize: number, term: string) {
+		this.isLoading = true;
+
+		this.subscriptionList.push(
+			this.userService.getUsersPaginated(page - 1, pageSize, term).subscribe({
+				next: (result) => {
+					this.users = result.content;
+					this.collectionSize = result.totalElements;
+					this.isLoading = false;
+				},
+				error: (error) => {
+					this.users = [];
+					this.isLoading = false;
+				},
+			})
+		);
+	}
 
 	refreshUsers() {
-		this.visibleUsers = this.USERS.slice(
-			(this.page - 1) * this.userCountPerPage,
-			(this.page - 1) * this.userCountPerPage + this.userCountPerPage
-		);
+		this.getUsers(this.page, this.pageSize, this.term);
+	}
+
+	searchUsersByTerm(searchTerm: string) {
+		this.page = 1;
+		this.term = searchTerm;
+		this.refreshUsers();
+	}
+
+	getRoleNameReadable(roleName: string): string {
+		switch (roleName) {
+			case 'ROLE_USER':
+				return 'Felhasználó';
+			case 'ROLE_MANAGER':
+				return 'Menedzser';
+			case 'ROLE_ADMIN':
+				return 'Adminisztrátor';
+			case 'ROLE_CHEF':
+				return 'Szakács';
+			default:
+				return 'Ismeretlen';
+		}
 	}
 }

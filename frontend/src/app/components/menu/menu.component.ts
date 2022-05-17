@@ -1,8 +1,15 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { Pizza } from 'src/app/models/Pizza';
-import { PizzaEditRequest } from 'src/app/models/PizzaEditRequest';
-import { EditPizzaModalComponent } from '../edit-pizza-modal/edit-pizza-modal.component';
+import { Subscription } from 'rxjs';
+import { PizzaResponse } from 'src/app/models/PizzaResponse';
+import { UserResponse } from 'src/app/models/UserResponse';
+import { UserDetailsStorageService } from 'src/app/services/auth/user-details-storage.service';
+import {
+	PizzaService,
+	PIZZA_SERVICE_URL,
+} from 'src/app/services/pizza/pizza.service';
+import { SavePizzaModalComponent } from '../save-pizza-modal/save-pizza-modal.component';
 
 @Component({
 	selector: 'app-menu',
@@ -10,51 +17,82 @@ import { EditPizzaModalComponent } from '../edit-pizza-modal/edit-pizza-modal.co
 	styleUrls: ['./menu.component.css'],
 })
 export class MenuComponent implements OnInit {
-	pizzas: Pizza[];
+	pizzas: PizzaResponse[] = [];
 
-	constructor(private modalService: NgbModal) {
-		this.pizzas = [];
-		for (let i: number = 0; i < 10; ++i) {
-			this.pizzas.push(
-				new Pizza(
-					i,
-					'Margherita',
-					'Paradicsomszósz, Mozzarella sajt, Paradicsom karika, Bazsalikom',
-					'assets/margherita.jpg',
-					2000
-				)
-			);
+	loggedInUser: UserResponse | null = null;
+
+	subscriptionList: Subscription[] = [];
+
+	isLoading: boolean = true;
+
+	constructor(
+		private pizzaService: PizzaService,
+		private userDetailsStorageService: UserDetailsStorageService,
+		private modalService: NgbModal,
+		private router: Router
+	) {}
+
+	ngOnInit(): void {
+		const user = this.userDetailsStorageService.getUser();
+		if (!this.userDetailsStorageService.isUserLoggedIn() || user === null) {
+			this.router.navigate(['login']);
+			return;
 		}
+		this.loggedInUser = user;
+
+		this.getPizzas();
 	}
 
-	ngOnInit(): void {}
+	private getPizzas(): void {
+		this.isLoading = true;
 
-	openEditPizzaModal(idx: number = NaN) {
-		const modalRef = this.modalService.open(EditPizzaModalComponent, {
+		this.subscriptionList.push(
+			this.pizzaService.getAllPizzas().subscribe({
+				next: (result: PizzaResponse[]) => {
+					this.pizzas = result;
+					this.isLoading = false;
+				},
+				error: (error) => {
+					this.pizzas = [];
+					this.isLoading = false;
+				},
+			})
+		);
+	}
+
+	openSavePizzaModal(index?: number) {
+		const modalRef = this.modalService.open(SavePizzaModalComponent, {
 			centered: true,
 		});
 
-		if (!isNaN(idx)) {
-			modalRef.componentInstance.model = this.pizzas[idx];
+		if (typeof index !== 'undefined') {
+			modalRef.componentInstance.pizza = this.pizzas[index];
 		}
 
-		modalRef.closed.subscribe({
-			next: (value) => {
-				const pizzaRequestModel = value as PizzaEditRequest;
+		this.subscriptionList.push(
+			modalRef.closed.subscribe({
+				next: (result: PizzaResponse) => {
+					if (typeof index !== 'undefined') {
+						this.pizzas[index] = result;
+					} else {
+						this.pizzas.push(result);
+					}
+				},
+			})
+		);
+	}
 
-				// TODO Service feldolgozás
-				console.log(JSON.stringify(pizzaRequestModel));
-				console.log(pizzaRequestModel.image);
-			},
-			error: (error) => {
-				// TODO
-				console.error(JSON.stringify(error));
-			},
-		});
+	getPizzaImageURLById(pizzaId: number): string {
+		return PIZZA_SERVICE_URL + `/${pizzaId}/image`;
 	}
 
 	deletePizza(id: number) {
-		// TODO Service feldolgozás
-		console.log(id);
+		this.subscriptionList.push(
+			this.pizzaService.deletePizzaById(id).subscribe({
+				next: (result) => {
+					this.pizzas = this.pizzas.filter((pizza) => pizza.id !== id);
+				},
+			})
+		);
 	}
 }

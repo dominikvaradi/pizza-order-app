@@ -1,0 +1,220 @@
+<div>
+	<div class="modal-header">
+		<h4 class="modal-title">Módosítás</h4>
+		<button
+			type="button"
+			class="btn-close"
+			aria-label="Close button"
+			aria-describedby="modal-title"
+			(click)="closeModal()"
+		></button>
+	</div>
+	<form (ngSubmit)="onSubmit()" novalidate [formGroup]="editUserForm">
+		<div class="modal-body bg-light">
+			<div class="container-fluid">
+				<div class="row g-3">
+					<div class="col-12">
+						<div class="input-group">
+							<span *ngIf="prefix" class="input-group-text rounded-0 rounded-start">
+								{{ prefix }}
+							</span>
+							<div class="form-floating flex-grow-1">
+								<input
+									type="{{ isSecret ? 'password' : 'text' }}"
+									id="inputValue"
+									#inputValue
+									formControlName="value"
+									[placeholder]="label"
+									class="form-control"
+									[ngClass]="{
+										'is-valid': valueControl?.dirty && (valueControl?.valid && !editUserForm.errors?.['match']),
+										'is-invalid': valueControl?.dirty && (valueControl?.invalid || editUserForm.errors?.['match']),
+										'rounded-0': isSecret || prefix,
+										'rounded-start': isSecret,
+										'rounded-end': prefix
+									}"
+								/>
+								<label for="inputPassword">{{ label }}</label>
+							</div>
+							<span
+								*ngIf="isSecret"
+								class="input-group-text rounded-0 rounded-end toggle-visibility-button"
+								(click)="
+									inputValue.type = inputValue.type === 'password' ? 'text' : 'password'
+								"
+								><fa-icon
+									[icon]="
+										inputValue.type === 'password' ? ['far', 'eye'] : ['far', 'eye-slash']
+									"
+								></fa-icon
+							></span>
+						</div>
+
+						<!-- Errors -->
+						<ngb-alert
+							[dismissible]="false"
+							type="danger"
+							*ngIf="valueControl?.dirty && (valueControl?.invalid || editUserForm.errors?.['match'])"
+						>
+							<p *ngIf="valueControl?.errors?.['required']">
+								A mező kitöltése kötelező!
+							</p>
+
+							<p *ngIf="valueControl?.errors?.['minlength']">
+								A mezőnek minimum
+								{{valueControl?.errors?.['minlength'].requiredLength}} karaktert kell
+								tartalmaznia!
+							</p>
+
+							<p *ngIf="valueControl?.errors?.['maxlength']">
+								A mezőnek maximum
+								{{valueControl?.errors?.['maxlength'].requiredLength}} karaktert szabad
+								tartalmaznia!
+							</p>
+
+							<p *ngIf="valueControl?.errors?.['fullname']">
+								A mezőnek egy érvényes teljes nevet kell tartalmaznia! (Például: Teszt
+								Elek)
+							</p>
+
+							<p *ngIf="valueControl?.errors?.['email']">
+								A mezőnek egy érvényes e-mail címet kell tartalmaznia! (Például:
+								tesztelek@tesztmail.com)
+							</p>
+
+							<p *ngIf="valueControl?.errors?.['phonenumber']">
+								A mezőnek pontosan 9 darab számot kell tartalmaznia!
+							</p>
+
+							<p *ngIf="valueControl?.errors?.['password']">
+								A mezőnek egy érvényes jelszót kell tartalmaznia!
+							</p>
+							<ul *ngIf="valueControl?.errors?.['password']">
+								<li>Minimum 8 karakter</li>
+								<li>Minimum egy darab nagybetű</li>
+								<li>Minimum egy darab kisbetű</li>
+								<li>Minimum egy darab szám</li>
+								<li>Minimum egy darab speciális karakter</li>
+							</ul>
+
+							<p *ngIf="editUserForm.errors?.['match']">
+								A két mező értéke nem egyezik!
+							</p>
+						</ngb-alert>
+					</div>
+
+					<div *ngIf="isNeedConfirm" class="col-12">
+						<div class="input-group">
+							<span *ngIf="prefix" class="input-group-text rounded-0 rounded-start">
+								{{ prefix }}
+							</span>
+							<div class="form-floating flex-grow-1">
+								<input
+									type="{{ isSecret ? 'password' : 'text' }}"
+									id="inputConfirmValue"
+									#inputConfirmValue
+									formControlName="valueConfirm"
+									[placeholder]="label + ' megerősítése'"
+									class="form-control"
+									[ngClass]="{
+										'is-valid': valueConfirmControl?.dirty && (valueConfirmControl?.valid && !editUserForm.errors?.['match']),
+										'is-invalid':
+											valueConfirmControl?.dirty && (valueConfirmControl?.invalid || editUserForm.errors?.['match']),
+										'rounded-0': isSecret || prefix,
+										'rounded-start': isSecret,
+										'rounded-end': prefix
+									}"
+								/>
+								<label for="inputPassword">{{ label + " megerősítése" }}</label>
+							</div>
+							<span
+								*ngIf="isSecret"
+								class="input-group-text rounded-0 rounded-end toggle-visibility-button"
+								(click)="
+									inputConfirmValue.type =
+										inputConfirmValue.type === 'password' ? 'text' : 'password'
+								"
+								><fa-icon
+									[icon]="
+										inputConfirmValue.type === 'password'
+											? ['far', 'eye']
+											: ['far', 'eye-slash']
+									"
+								></fa-icon
+							></span>
+						</div>
+
+						<!-- Errors -->
+						<ngb-alert
+							[dismissible]="false"
+							type="danger"
+							*ngIf="valueConfirmControl?.dirty && (valueConfirmControl?.invalid || editUserForm.errors?.['match'])"
+						>
+							<p *ngIf="valueConfirmControl?.errors?.['required']">
+								A mező kitöltése kötelező!
+							</p>
+
+							<p *ngIf="valueConfirmControl?.errors?.['minlength']">
+								A mezőnek minimum
+								{{valueConfirmControl?.errors?.['minlength'].requiredLength}} karaktert
+								kell tartalmaznia!
+							</p>
+
+							<p *ngIf="valueConfirmControl?.errors?.['maxlength']">
+								A mezőnek maximum
+								{{valueConfirmControl?.errors?.['maxlength'].requiredLength}} karaktert
+								szabad tartalmaznia!
+							</p>
+
+							<p *ngIf="valueConfirmControl?.errors?.['fullname']">
+								A mezőnek egy érvényes teljes nevet kell tartalmaznia! (Például: Teszt
+								Elek)
+							</p>
+
+							<p *ngIf="valueConfirmControl?.errors?.['email']">
+								A mezőnek egy érvényes e-mail címet kell tartalmaznia! (Például:
+								tesztelek@tesztmail.com)
+							</p>
+
+							<p *ngIf="valueConfirmControl?.errors?.['phonenumber']">
+								A mezőnek pontosan 9 darab számot kell tartalmaznia!
+							</p>
+
+							<p *ngIf="valueConfirmControl?.errors?.['password']">
+								A mezőnek egy érvényes jelszót kell tartalmaznia!
+							</p>
+							<ul *ngIf="valueConfirmControl?.errors?.['password']">
+								<li>Minimum 8 karakter</li>
+								<li>Minimum egy darab nagybetű</li>
+								<li>Minimum egy darab kisbetű</li>
+								<li>Minimum egy darab szám</li>
+								<li>Minimum egy darab speciális karakter</li>
+							</ul>
+
+							<p *ngIf="editUserForm.errors?.['match']">
+								A két mező értéke nem egyezik!
+							</p>
+						</ngb-alert>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="modal-footer">
+			<button
+				type="submit"
+				class="btn btn-outline-success"
+				[disabled]="editUserForm.invalid || !editUserForm.dirty"
+			>
+				Mentés
+			</button>
+			<button
+				type="button"
+				ngbAutofocus
+				class="btn btn-outline-danger"
+				(click)="closeModal()"
+			>
+				Bezárás
+			</button>
+		</div>
+	</form>
+</div>

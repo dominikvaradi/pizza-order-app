@@ -3,6 +3,11 @@
 		<div class="col-12 text-center">
 			<h1 class="display-1">Pizzák</h1>
 		</div>
+		<div *ngIf="isLoading" class="col-12 text-center mt-3">
+			<div class="spinner-border text-danger" style="width: 3rem; height: 3rem;">
+				<span class="visually-hidden">Betöltés...</span>
+			</div>
+		</div>
 	</div>
 	<div class="row">
 		<div
@@ -11,17 +16,19 @@
 		>
 			<div class="card bg-light">
 				<img
-					src="{{ pizza.imageUrl }}"
+					src="{{ getPizzaImageURLById(pizza.id) }}"
 					class="card-img-top"
 					alt="Pizza Cover Photo"
 				/>
 				<div class="card-body">
 					<h5 class="card-title">{{ pizza.name }}</h5>
-					<h6 class="card-subtitle text-muted fst-italic mb-2">{{ pizza.price }} Ft</h6>
+					<h6 class="card-subtitle text-muted fst-italic mb-2">
+						{{ pizza.price }} Ft
+					</h6>
 					<p class="card-text">{{ pizza.description }}</p>
 				</div>
 
-				<div class="card-footer">
+				<div *ngIf="this.loggedInUser" class="card-footer">
 					<form (keydown.enter)="$event.preventDefault()">
 						<div class="input-group ms-auto to-cart">
 							<input
@@ -43,6 +50,10 @@
 					</form>
 				</div>
 			</div>
+		</div>
+
+		<div *ngIf="!isLoading && pizzas.length === 0" class="col-12 text-center">
+			<p>Nem található egyetlen pizza sem.</p>
 		</div>
 	</div>
 </div>

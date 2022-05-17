@@ -1,0 +1,150 @@
+<div>
+	<div class="modal-header">
+		<h4 class="modal-title">{{ title }}</h4>
+		<button
+			type="button"
+			class="btn-close"
+			aria-label="Close button"
+			aria-describedby="modal-title"
+			(click)="closeModal()"
+		></button>
+	</div>
+	<form [formGroup]="saveAddressForm" (ngSubmit)="onSubmit()">
+		<div class="modal-body bg-light">
+			<div class="container-fluid">
+				<div class="row g-3">
+					<div class="col-12">
+						<div class="form-floating">
+							<input
+								formControlName="zipCode"
+								id="inputZipCode"
+								type="number"
+								class="form-control number-without-spinner"
+								placeholder="Irányítószám"
+								[ngClass]="{
+									'is-valid': zipCode?.dirty && zipCode?.valid,
+									'is-invalid': zipCode?.dirty && zipCode?.invalid
+								}"
+							/>
+							<label for="inputZipCode">Irányítószám</label>
+						</div>
+
+						<!-- Errors -->
+						<ngb-alert
+							[dismissible]="false"
+							type="danger"
+							*ngIf="zipCode?.dirty && zipCode?.invalid"
+						>
+							<p *ngIf="zipCode?.errors?.['required']">
+								Az irányítószám mező nem lehet üres!
+							</p>
+
+							<p *ngIf="zipCode?.errors?.['pattern']">
+								Az irányítószám mezőnek egy érvényes irányítószámot kell tartalmaznia!
+								(4 jegyű szám)
+							</p>
+						</ngb-alert>
+					</div>
+
+					<div class="col-12">
+						<div class="form-floating">
+							<input
+								formControlName="city"
+								id="inputCity"
+								type="text"
+								class="form-control"
+								placeholder="Város"
+								[ngClass]="{
+									'is-valid': city?.dirty && city?.valid,
+									'is-invalid': city?.dirty && city?.invalid
+								}"
+							/>
+							<label for="inputCity">Város</label>
+						</div>
+
+						<!-- Errors -->
+						<ngb-alert
+							[dismissible]="false"
+							type="danger"
+							*ngIf="city?.dirty && city?.invalid"
+						>
+							<p *ngIf="city?.errors?.['required']">A város mező nem lehet üres!</p>
+						</ngb-alert>
+					</div>
+
+					<div class="col-12">
+						<div class="form-floating">
+							<input
+								formControlName="street"
+								id="inputStreet"
+								type="text"
+								class="form-control"
+								placeholder="Utca"
+								[ngClass]="{
+									'is-valid': street?.dirty && street?.valid,
+									'is-invalid': street?.dirty && street?.invalid
+								}"
+							/>
+							<label for="inputStreet">Utca</label>
+						</div>
+
+						<!-- Errors -->
+						<ngb-alert
+							[dismissible]="false"
+							type="danger"
+							*ngIf="street?.dirty && street?.invalid"
+						>
+							<p *ngIf="street?.errors?.['required']">Az utca mező nem lehet üres!</p>
+						</ngb-alert>
+					</div>
+
+					<div class="col-12">
+						<div class="col-12 form-floating">
+							<input
+								formControlName="houseNumber"
+								id="inputHouseNumber"
+								type="text"
+								class="form-control"
+								placeholder="Házszám"
+								[ngClass]="{
+									'is-valid': houseNumber?.dirty && houseNumber?.valid,
+									'is-invalid': houseNumber?.dirty && houseNumber?.invalid
+								}"
+							/>
+							<label for="inputHouseNumber">Házszám</label>
+						</div>
+
+						<!-- Errors -->
+						<ngb-alert
+							[dismissible]="false"
+							type="danger"
+							*ngIf="houseNumber?.dirty && houseNumber?.invalid"
+						>
+							<p *ngIf="houseNumber?.errors?.['required']">
+								Az házszám mező nem lehet üres!
+							</p>
+						</ngb-alert>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="modal-footer">
+			<button
+				type="submit"
+				[disabled]="saveAddressForm.invalid || !saveAddressForm.dirty || isLoading"
+				class="btn btn-outline-success"
+			>
+				<span *ngIf="isLoading" class="spinner-border spinner-border-sm text-danger "></span>
+				{{ submitButtonTitle }}
+			</button>
+			<button
+				type="button"
+				ngbAutofocus
+				class="btn btn-outline-danger"
+				(click)="closeModal()"
+			>
+				Bezárás
+			</button>
+		</div>
+	</form>
+</div>

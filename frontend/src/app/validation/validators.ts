@@ -1,4 +1,5 @@
 import { ValidatorFn, Validators } from '@angular/forms';
+import CustomValidation from './custom-validation';
 
 export default class CustomValidators {
 	static usernameValidator: ValidatorFn[] = [
@@ -9,22 +10,21 @@ export default class CustomValidators {
 
 	static fullNameValidator: ValidatorFn[] = [
 		Validators.required,
-		Validators.pattern(
-			'^[A-ZÍŰÁÉÚŐÓÜÖ][a-zíűáéúőóüö]+( [A-ZÍŰÁÉÚŐÓÜÖ][a-zíűáéúőóüö]+)+$'
-		),
+		CustomValidation.fullName,
 	];
 
-	static emailValidator: ValidatorFn[] = [Validators.required, Validators.email];
+	static emailValidator: ValidatorFn[] = [
+		Validators.required,
+		CustomValidation.email,
+	];
 
 	static phoneNumberValidator: ValidatorFn[] = [
 		Validators.required,
-		Validators.pattern('^[0-9]{9}$'),
+		CustomValidation.phoneNumber,
 	];
 
 	static passwordValidator: ValidatorFn[] = [
 		Validators.required,
-		Validators.pattern(
-			'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$'
-		),
+		CustomValidation.password,
 	];
 }

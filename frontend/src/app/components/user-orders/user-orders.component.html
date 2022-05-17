@@ -1,41 +1,85 @@
 <div class="container">
 	<div class="row">
 		<div class="col-12 text-center">
-			<h1 class="display-1">Rendeléseim</h1>
+			<h1 class="display-1">Felhasználó rendelései</h1>
 		</div>
 	</div>
 
 	<div class="row">
 		<div class="col-12 text-center">
-			<h2>Aktív Rendelésem</h2>
+			<h2>Aktív Rendelés</h2>
+		</div>
+
+		<div *ngIf="isActiveOrderLoading" class="col-12 text-center mt-3">
+			<div class="spinner-border text-danger" style="width: 3rem; height: 3rem">
+				<span class="visually-hidden">Betöltés...</span>
+			</div>
+		</div>
+
+		<div
+			*ngIf="!isActiveOrderLoading && activeOrder; else activeOrderNotFound"
+			class="col-12 text-center mb-3"
+		>
+			<img
+				class="pizza-image"
+				[src]="getStatusImage(activeOrder.orderStatusName)"
+			/>
+
+			<p class="m-0 fw-bolder">
+				{{ getReadableOrderStatusName(activeOrder.orderStatusName) }}
+			</p>
+			<p class="m-0 mb-2 fw-bolder">
+				{{ getElapsedMinutes(activeOrder.createdAt) }} perce
+			</p>
+			<p class="m-0">{{ addressToString(activeOrder.address) }}</p>
+			<p class="m-0">{{ activeOrder.totalSum }} Ft</p>
+			<p class="m-0 mt-1 fw-bolder">Pizzák</p>
+			<ul class="list-group list-group-flush d-inline-block">
+				<li *ngFor="let orderItem of activeOrder.items" class="list-group-item">
+					{{ orderItem.pizza.name }}: {{ orderItem.amount }} db
+				</li>
+			</ul>
 		</div>
 	</div>
 
 	<div class="row justify-content-center">
 		<div class="col-12 text-center">
-			<h2>Korábbi Rendeléseim</h2>
+			<h2>Korábbi Rendelések</h2>
 		</div>
 
-		<div class="col-12 col-lg-10 col-xl-8">
-			<div class="table-responsive-sm">
+		<div *ngIf="isOrdersLoading" class="col-12 text-center mt-3">
+			<div class="spinner-border text-danger" style="width: 3rem; height: 3rem">
+				<span class="visually-hidden">Betöltés...</span>
+			</div>
+		</div>
+
+		<div
+			*ngIf="orders.length > 0; else noOrdersPresent"
+			class="col-12 col-lg-10 col-xl-8"
+		>
+			<div *ngIf="!isOrdersLoading" class="table-responsive-sm">
 				<table class="table table-light table-striped table-hover align-middle">
 					<thead class="table-info">
 						<tr>
 							<th scope="col" class="text-center min-width-cell">#</th>
-							<th scope="col" class="min-width-cell">Dátum</th>
+							<th scope="col">Dátum</th>
 							<th scope="col">Cím</th>
-							<th scope="col" class="text-center min-width-cell d-none d-sm-table-cell">Összeg</th>
-							<th scope="col" class="text-center min-width-cell d-none d-sm-table-cell">Állapot</th>
+							<th scope="col" class="text-center">Összeg</th>
+							<th scope="col" class="text-center">Állapot</th>
 							<th scope="col" class="text-center min-width-cell"></th>
 						</tr>
 					</thead>
 					<tbody>
-						<tr *ngFor="let order of visibleOrders">
+						<tr *ngFor="let order of orders">
 							<th scope="row" class="text-center min-width-cell">{{ order.id }}</th>
-							<td class="min-width-cell">{{ order.date }}</td>
-							<td>{{ order.address }}</td>
-							<td class="text-center text-break d-none d-sm-table-cell">{{ order.total }} Ft</td>
-							<td class="text-center min-width-cell d-none d-sm-table-cell">{{ order.status }}</td>
+							<td>
+								{{ order.createdAt | date: "YYYY. MM. dd. HH:mm" }}
+							</td>
+							<td>{{ addressToString(order.address) }}</td>
+							<td class="text-center">{{ order.totalSum }} Ft</td>
+							<td class="text-center">
+								{{ getReadableOrderStatusName(order.orderStatusName) }}
+							</td>
 							<td class="text-center min-width-cell">
 								<a [routerLink]="['/order', order.id]">Részletek</a>
 							</td>
@@ -52,11 +96,22 @@
 					[directionLinks]="false"
 					[ellipses]="false"
 					[boundaryLinks]="true"
-					[pageSize]="orderCountPerPage"
-					(pageChange)="refreshOrders()"
+					[pageSize]="pageSize"
+					(pageChange)="refreshOrderPage()"
 				>
 				</ngb-pagination>
 			</div>
 		</div>
+		<ng-template #noOrdersPresent>
+			<div *ngIf="!isOrdersLoading" class="col-12 text-center">
+				<p>Nem található korábbi rendelés.</p>
+			</div>
+		</ng-template>
+
+		<ng-template #activeOrderNotFound>
+			<div *ngIf="!isOrdersLoading" class="col-12 text-center">
+				<p>Jelenleg nincsen aktív rendelésed.</p>
+			</div>
+		</ng-template>
 	</div>
 </div>

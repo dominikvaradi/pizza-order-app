@@ -12,27 +12,16 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class UserDetailsImpl implements UserDetails {
-    private final long id;
+    private final User user;
 
-    private final String username;
+    private final Set<GrantedAuthority> authorities;
 
-    private final String password;
+    public UserDetailsImpl(User user) {
+        this.user = user;
 
-    private final Collection<? extends GrantedAuthority> authorities;
-
-    public UserDetailsImpl(Long id, String username, String password, Collection<? extends GrantedAuthority> authorities) {
-        this.id = id;
-        this.username = username;
-        this.password = password;
-        this.authorities = authorities;
-    }
-
-    public static UserDetailsImpl build(User user) {
-        Set<GrantedAuthority> authorities = Stream.of(user.getRole())
+        this.authorities = Stream.of(user.getRole())
             .map(role -> new SimpleGrantedAuthority(role.getName().name()))
             .collect(Collectors.toSet());
-
-        return new UserDetailsImpl(user.getId(), user.getUsername(), user.getPassword(), authorities);
     }
 
     @Override
@@ -40,19 +29,17 @@ public class UserDetailsImpl implements UserDetails {
         return authorities;
     }
 
-    public long getId() {
-        return this.id;
-    }
-
     @Override
     public String getPassword() {
-        return this.password;
+        return this.user.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return this.username;
+        return this.user.getUsername();
     }
+
+    public User getUser() { return this.user; }
 
     @Override
     public boolean isAccountNonExpired() {
@@ -82,9 +69,11 @@ public class UserDetailsImpl implements UserDetails {
             return false;
 
         UserDetailsImpl other = (UserDetailsImpl) o;
-        return Objects.equals(this.id, other.id) &&
-            Objects.equals(this.username, other.username) &&
-            Objects.equals(this.password, other.password) &&
-            this.authorities.containsAll(other.authorities);
+        return Objects.equals(this.user, other.user);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(user);
     }
 }

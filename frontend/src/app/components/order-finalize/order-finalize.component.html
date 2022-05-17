@@ -6,115 +6,140 @@
 	</div>
 
 	<div class="row justify-content-center">
-		<div class="col-12 col-xl-10">
-			<form [formGroup]="orderFinalizeForm" (ngSubmit)="onSubmit()" novalidate>
-				<div class="form-group text-center mb-3">
-					<h4>Szállítási cím</h4>
+		<div
+			*ngIf="isActiveOrderLoading || isItemsLoading"
+			class="col-12 text-center mt-3"
+		>
+			<div class="spinner-border text-danger" style="width: 3rem; height: 3rem">
+				<span class="visually-hidden">Betöltés...</span>
+			</div>
+		</div>
 
-					<select
-						class="form-select text-center"
-						aria-label="Default select example"
-						formControlName="address"
-					>
-						<option disabled value="">Cím választása...</option>
-						<option *ngFor="let address of addresses" [ngValue]="address">
-							{{ address }}
-						</option>
-					</select>
+		<div
+			*ngIf="!isActiveOrderLoading && !isItemsLoading"
+			class="col-12 col-xl-10"
+		>
+			<div *ngIf="cartItems.length > 0 && !hasActiveOrder; else error">
+				<form [formGroup]="orderFinalizeForm" (ngSubmit)="onSubmit()" novalidate>
+					<h4 class="text-center">Szállítási cím</h4>
 
-					<button
-						type="button"
-						class="btn btn-primary mt-2"
-						(click)="openEditAddressModal()"
-					>
-						Új cím felvétele
-					</button>
-
-					<!-- Errors -->
-					<ngb-alert
-						[dismissible]="false"
-						type="danger"
-						*ngIf="address?.dirty && address?.invalid"
-					>
-						<p *ngIf="address?.errors?.['required']">
-							A szállítási címet kötelező megadni!
-						</p>
-					</ngb-alert>
-				</div>
-
-				<div class="form-group text-center mb-3">
-					<h4>Fizetés</h4>
-					<div class="form-check form-check-inline">
-						<input
-							type="radio"
-							id="radioCash"
-							formControlName="paymentType"
-							value="cash"
-							class="form-check-input"
-						/>
-						<label class="form-check-label" for="radioCash">Készpénz</label>
+					<div *ngIf="isAddressesLoading" class="text-center mt-3">
+						<div class="spinner-border text-danger" style="width: 3rem; height: 3rem">
+							<span class="visually-hidden">Betöltés...</span>
+						</div>
 					</div>
-					<div class="form-check form-check-inline">
-						<input
-							type="radio"
-							id="radioCreditCard"
-							formControlName="paymentType"
-							value="creditCard"
-							class="form-check-input"
-						/>
-						<label class="form-check-label" for="radioCreditCard"
-							>Bankkártya/Hitelkártya</label
+
+					<div *ngIf="!isAddressesLoading" class="form-group text-center mb-3">
+						<select
+							class="form-select text-center"
+							aria-label="Default select example"
+							formControlName="address"
 						>
+							<option disabled value="">Cím választása...</option>
+							<option *ngFor="let address of addresses" [ngValue]="address">
+								{{ addressToString(address) }}
+							</option>
+						</select>
+
+						<button
+							*ngIf="addresses.length < 5"
+							type="button"
+							class="btn btn-primary mt-2"
+							(click)="openSaveAddressModal()"
+						>
+							Új cím felvétele
+						</button>
+
+						<!-- Errors -->
+						<ngb-alert
+							[dismissible]="false"
+							type="danger"
+							*ngIf="address?.dirty && address?.invalid"
+						>
+							<p *ngIf="address?.errors?.['required']">
+								A szállítási címet kötelező megadni!
+							</p>
+						</ngb-alert>
 					</div>
 
-					<!-- Errors -->
-					<ngb-alert
-						[dismissible]="false"
-						type="danger"
-						*ngIf="paymentType?.dirty && paymentType?.invalid"
-					>
-						<p *ngIf="paymentType?.errors?.['required']">
-							A fizetési módot kötelező megadni!
-						</p>
-					</ngb-alert>
+					<h4 class="text-center">Fizetés</h4>
+					<div class="form-group text-center mb-3">
+						<div
+							*ngFor="let paymentMethod of paymentMethods"
+							class="form-check form-check-inline"
+						>
+							<input
+								type="radio"
+								id="radioCash"
+								formControlName="paymentType"
+								[value]="paymentMethod.name"
+								class="form-check-input"
+							/>
+							<label class="form-check-label" for="radioCash">{{
+								getReadablePaymentMethod(paymentMethod.name)
+							}}</label>
+						</div>
+
+						<!-- Errors -->
+						<ngb-alert
+							[dismissible]="false"
+							type="danger"
+							*ngIf="paymentType?.dirty && paymentType?.invalid"
+						>
+							<p *ngIf="paymentType?.errors?.['required']">
+								A fizetési módot kötelező megadni!
+							</p>
+						</ngb-alert>
+					</div>
+
+					<div class="table-responsive-sm table-light">
+						<h4 class="text-center">Kosár tartalma</h4>
+						<table class="table table-striped table-hover align-middle">
+							<thead class="table-info">
+								<tr>
+									<th role="col" class="text-center">Név</th>
+									<th role="col" class="text-center">Darab ár</th>
+									<th role="col" class="text-center">Darab</th>
+									<th role="col" class="text-center">Teljes ár</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr *ngFor="let cartItem of cartItems">
+									<td class="text-center text-break mw-100px">
+										{{ cartItem.pizza.name }}
+									</td>
+									<td class="text-center">{{ cartItem.pizza.price }} Ft</td>
+									<td class="text-center">{{ cartItem.amount }} db</td>
+									<td class="text-center">
+										{{ cartItem.amount * cartItem.pizza.price }} Ft
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+
+					<div class="text-center">
+						<h3>Végösszeg: {{ sumOfPizzaPrices() }} Ft</h3>
+
+						<button
+							type="submit"
+							class="btn btn-primary me-2"
+							[disabled]="orderFinalizeForm.invalid"
+						>
+							Rendelés
+						</button>
+						<a [routerLink]="['/order-cart']" class="btn btn-secondary">Vissza</a>
+					</div>
+				</form>
+			</div>
+			<ng-template #error>
+				<div class="col-12">
+					<p *ngIf="cartItems.length === 0" class="text-center">
+						A kosarad jelenleg üres!
+					</p>
+					<p *ngIf="hasActiveOrder" class="text-center">Van már aktív rendelésed!</p>
 				</div>
-
-				<div class="table-responsive-sm table-light">
-					<h4 class="text-center">Kosár tartalma</h4>
-					<table class="table table-striped table-hover align-middle">
-						<thead class="table-info">
-							<tr>
-								<th role="col" class="text-center">Név</th>
-								<th role="col">Leírás</th>
-								<th role="col" class="min-width-cell text-center">Ár</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr *ngFor="let pizza of pizzas">
-								<td class="text-center text-break mw-100px">
-									{{ pizza.name }}
-								</td>
-
-								<td class="text-break">{{ pizza.description }}</td>
-								<td class="min-width-cell text-center">{{ pizza.price }} Ft</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-
-				<div class="text-center">
-					<h3>Végösszeg: {{ sumOfPizzaPrices() }} Ft</h3>
-
-					<button
-						type="submit"
-						class="btn btn-primary me-2"
-						[disabled]="orderFinalizeForm.invalid"
-					>
-						Rendelés
-					</button>
-					<a [routerLink]="['/order-cart']" class="btn btn-secondary">Vissza</a>
-				</div>
-			</form>
+			</ng-template>
 		</div>
 	</div>
 </div>

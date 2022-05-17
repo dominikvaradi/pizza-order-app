@@ -1,13 +1,15 @@
 package hu.dominikvaradi.pizzaorderapp.service;
 
+import hu.dominikvaradi.pizzaorderapp.data.dto.order.OrderCreateRequestDTO;
+import hu.dominikvaradi.pizzaorderapp.data.dto.order.OrderStatusEditRequestDTO;
 import hu.dominikvaradi.pizzaorderapp.data.model.*;
-import hu.dominikvaradi.pizzaorderapp.data.model.dto.order.OrderCreateRequestDTO;
-import hu.dominikvaradi.pizzaorderapp.data.model.dto.order.OrderStatusEditRequestDTO;
 import hu.dominikvaradi.pizzaorderapp.data.model.enums.EOrderStatus;
 import hu.dominikvaradi.pizzaorderapp.data.model.enums.EPaymentMethod;
 import hu.dominikvaradi.pizzaorderapp.data.repository.*;
 import hu.dominikvaradi.pizzaorderapp.service.exception.BadRequestException;
 import hu.dominikvaradi.pizzaorderapp.service.exception.NotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,7 +17,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Transactional
 @Service
@@ -30,22 +31,29 @@ public class OrderServiceImpl implements OrderService {
 
     private final UserRepository userRepository;
 
-    public OrderServiceImpl(OrderRepository orderRepository, PaymentMethodRepository paymentMethodRepository, OrderStatusRepository orderStatusRepository, AddressRepository addressRepository, UserRepository userRepository) {
+    private final CartRepository cartRepository;
+
+    public OrderServiceImpl(OrderRepository orderRepository, PaymentMethodRepository paymentMethodRepository, OrderStatusRepository orderStatusRepository, AddressRepository addressRepository, UserRepository userRepository, CartRepository cartRepository) {
         this.orderRepository = orderRepository;
         this.paymentMethodRepository = paymentMethodRepository;
         this.orderStatusRepository = orderStatusRepository;
         this.addressRepository = addressRepository;
         this.userRepository = userRepository;
+        this.cartRepository = cartRepository;
     }
 
     @Override
-    public List<Order> getAllOrders() {
-        return orderRepository.findAll();
+    public Page<Order> getAllOrders(String term, Pageable pageable) {
+        if (term == null || term.isBlank()) {
+            return orderRepository.findAll(pageable);
+        }
+
+        return orderRepository.findByUserUsernameOrUserFullNameContainsAllIgnoreCase(term, pageable);
     }
 
     @Override
     public Order createNewOrder(OrderCreateRequestDTO order) throws BadRequestException, NotFoundException {
-        OrderStatus orderStatus_underProcess = orderStatusRepository.findByName(EOrderStatus.STATUS_UNDER_PROCESS)
+        OrderStatus orderStatusUnderProcess = orderStatusRepository.findByName(EOrderStatus.STATUS_UNDER_PROCESS)
             .orElse(new OrderStatus(EOrderStatus.STATUS_UNDER_PROCESS));
 
         Address address = addressRepository.findById(order.getAddressId())
@@ -61,26 +69,26 @@ public class OrderServiceImpl implements OrderService {
             throw new BadRequestException("User already has an active order at the time!");
         }
 
-        Order newOrder = new Order(LocalDateTime.now(), orderStatus_underProcess, user, address, paymentMethod);
-        List<Pizza> orderedPizzasFromCart = user.getCart()
-            .getItems()
-            .stream()
-            .map(CartItem::getPizza)
-            .collect(Collectors.toList());
+        Order newOrder = new Order(LocalDateTime.now(), orderStatusUnderProcess, user, address, paymentMethod);
+        Cart cartOfUser = cartRepository.findByUserId(user.getId())
+            .orElseThrow(() -> new NotFoundException("User's cart with given user id has not found! (userId = " + order.getUserId() + ")"));
 
-        List<OrderItem> orderItemList = newOrder.getItems();
-        for(Pizza pizza : orderedPizzasFromCart) {
-            orderItemList.add(new OrderItem(pizza, newOrder));
+        for(CartItem cartItem : cartOfUser.getItems()) {
+            OrderItem newOrderItem = new OrderItem(cartItem.getPizza(), newOrder, cartItem.getAmount());
+            newOrder.getItems().add(newOrderItem);
         }
 
+        cartOfUser.getItems().clear();
+
         orderRepository.save(newOrder);
+        cartRepository.save(cartOfUser);
 
         return newOrder;
     }
 
     @Override
-    public List<Order> getAllActiveOrders() {
-        return orderRepository.findByOrderStatus_NameIsIn(getActiveOrderStatusList());
+    public Page<Order> getAllActiveOrders(Pageable pageable) {
+        return orderRepository.findByOrderStatusNameIsIn(getActiveOrderStatusList(), pageable);
     }
 
     @Override
@@ -90,7 +98,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public void editOrderStatusById(long orderId, OrderStatusEditRequestDTO orderStatusEditRequest) throws BadRequestException, NotFoundException {
+    public Order editOrderStatusById(long orderId, OrderStatusEditRequestDTO orderStatusEditRequest) throws BadRequestException, NotFoundException {
         if (orderId != orderStatusEditRequest.getId()) {
             throw new BadRequestException("Path id is not the same as the order's id!");
         }
@@ -101,26 +109,24 @@ public class OrderServiceImpl implements OrderService {
         Order order = getOrderById(orderId);
         order.setOrderStatus(newStatus);
 
-        orderRepository.save(order);
+        return orderRepository.save(order);
     }
 
     @Transactional
     @Override
-    public List<Pizza> getPizzasByOrderId(long orderId) throws NotFoundException {
+    public List<OrderItem> getOrderItemsByOrderId(long orderId) throws NotFoundException {
         Order order = getOrderById(orderId);
 
-        return order.getItems()
-            .stream()
-            .map(OrderItem::getPizza)
-            .collect(Collectors.toList());
+        return order.getItems();
     }
 
     @Override
-    public List<Order> getAllOrdersByUserId(long userId) throws NotFoundException {
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new NotFoundException("User with given id has not found! (userId = " + userId + ")"));
+    public Page<Order> getAllOrdersByUserId(long userId, Pageable pageable) throws NotFoundException {
+        if (!userRepository.existsById(userId)) {
+            throw new NotFoundException("User with given id has not found! (userId = " + userId + ")");
+        }
 
-        return user.getOrders();
+        return orderRepository.findByUserId(userId, pageable);
     }
 
     @Override
@@ -130,7 +136,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private Optional<Order> getUsersActiveOrder(long userId) {
-        return orderRepository.findByUser_IdAndOrderStatus_NameIsIn(userId, getActiveOrderStatusList());
+        return orderRepository.findByUserIdAndOrderStatusNameIsIn(userId, getActiveOrderStatusList());
     }
 
     private List<EOrderStatus> getActiveOrderStatusList() {

@@ -3,14 +3,17 @@ package hu.dominikvaradi.pizzaorderapp.data.model;
 import org.hibernate.validator.constraints.Length;
 
 import javax.persistence.*;
-import javax.validation.constraints.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "user")
 public class User {
-    public static final String REGEX_EMAIL = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$";
+    public static final String REGEX_EMAIL = "^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)+$";
     public static final String REGEX_PHONE_NUMBER = "^\\+36[0-9]{9}$";
 
     @Id
@@ -30,13 +33,13 @@ public class User {
 
     @Length(max = 255)
     @NotBlank
-    @Email(regexp = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")
+    @Pattern(message = "Invalid email!",regexp = REGEX_EMAIL)
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
     @Length(max = 15)
     @NotBlank
-    @Pattern(message = "Invalid phone number!", regexp = "^\\+36[0-9]{9}$")
+    @Pattern(message = "Invalid phone number!", regexp = REGEX_PHONE_NUMBER)
     @Column(name = "phone_number", nullable = false, length = 15)
     private String phoneNumber;
 
@@ -57,25 +60,16 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Order> orders = new ArrayList<>();
 
-    @NotNull
-    @OneToOne(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.ALL, optional = false, orphanRemoval = true)
-    private Cart cart;
-
     public User() {
     }
 
-    public User(String username, String password, String email, String phoneNumber, String fullName, Role role, Cart cart) {
+    public User(String username, String password, String email, String phoneNumber, String fullName, Role role) {
         this.username = username;
         this.password = password;
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.fullName = fullName;
         this.role = role;
-        this.cart = cart;
-    }
-
-    public Cart getCart() {
-        return cart;
     }
 
     public void setOrders(List<Order> orders) {

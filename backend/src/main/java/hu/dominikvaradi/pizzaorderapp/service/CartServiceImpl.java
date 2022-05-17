@@ -1,16 +1,18 @@
 package hu.dominikvaradi.pizzaorderapp.service;
 
+import hu.dominikvaradi.pizzaorderapp.data.dto.cart.CartItemSaveRequestDTO;
 import hu.dominikvaradi.pizzaorderapp.data.model.Cart;
 import hu.dominikvaradi.pizzaorderapp.data.model.CartItem;
 import hu.dominikvaradi.pizzaorderapp.data.model.Pizza;
-import hu.dominikvaradi.pizzaorderapp.data.model.dto.cart.CartAddPizzaRequestDTO;
 import hu.dominikvaradi.pizzaorderapp.data.repository.CartRepository;
 import hu.dominikvaradi.pizzaorderapp.data.repository.PizzaRepository;
+import hu.dominikvaradi.pizzaorderapp.service.exception.BadRequestException;
 import hu.dominikvaradi.pizzaorderapp.service.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Transactional
 @Service
@@ -41,14 +43,26 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public void createNewCartItemByUserId(long userId, CartAddPizzaRequestDTO cartItemWithCountToAdd) throws NotFoundException {
+    public void createNewCartItemByUserId(long userId, CartItemSaveRequestDTO cartItemToAdd) throws NotFoundException, BadRequestException {
+        if (userId != cartItemToAdd.getUserId()) {
+            throw new BadRequestException("Given userId of request body is not equals to the path variable userId!");
+        }
+
         Cart cart = getCartByUserId(userId);
 
-        Pizza pizzaToAdd = pizzaRepository.findById(cartItemWithCountToAdd.getPizzaId())
-            .orElseThrow(() -> new NotFoundException("Pizza with given pizza id has not found! (pizzaId = " + cartItemWithCountToAdd.getPizzaId() + ")"));
+        Pizza pizzaToAdd = pizzaRepository.findById(cartItemToAdd.getPizzaId())
+            .orElseThrow(() -> new NotFoundException("Pizza with given pizza id has not found! (pizzaId = " + cartItemToAdd.getPizzaId() + ")"));
 
-        for(int i = 0; i < cartItemWithCountToAdd.getCount(); ++i) {
-            cart.getItems().add(new CartItem(pizzaToAdd, cart));
+        Optional<CartItem> existingPizzaItem = cart.getItems()
+            .stream()
+            .filter(cartItem -> cartItem.getPizza() == pizzaToAdd)
+            .findFirst();
+
+        if (existingPizzaItem.isPresent()) {
+            existingPizzaItem.get().setAmount(existingPizzaItem.get().getAmount() + cartItemToAdd.getAmount());
+        } else {
+            CartItem newItem = new CartItem(pizzaToAdd, cart, cartItemToAdd.getAmount());
+            cart.getItems().add(newItem);
         }
 
         cartRepository.save(cart);
@@ -67,7 +81,12 @@ public class CartServiceImpl implements CartService {
     public int getCartSizeByUserId(long userId) throws NotFoundException {
         Cart cart = getCartByUserId(userId);
 
-        return cart.getItems().size();
+        int size = 0;
+        for(CartItem cartItem: cart.getItems()) {
+            size += cartItem.getAmount();
+        }
+
+        return size;
     }
 
     private Cart getCartByUserId(long userId) throws NotFoundException {

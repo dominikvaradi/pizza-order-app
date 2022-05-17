@@ -1,87 +1,149 @@
-import { Component, OnInit } from '@angular/core';
-import { Address } from 'src/app/models/Address';
-import { Order } from 'src/app/models/Order';
-import { OrderWithInformationAndPizzas } from 'src/app/models/OrderWithInformationAndPizzas';
-import { Pizza } from 'src/app/models/Pizza';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import {
+	AddressResponse,
+	addressToString,
+} from 'src/app/models/AddressResponse';
+import { OrderResponse } from 'src/app/models/OrderResponse';
+import { OrderStatusEditRequest } from 'src/app/models/OrderStatusEditRequest';
+import { OrderStatusResponse } from 'src/app/models/OrderStatusResponse';
+import { UserResponse } from 'src/app/models/UserResponse';
+import { UserDetailsStorageService } from 'src/app/services/auth/user-details-storage.service';
+import { EnumService } from 'src/app/services/enum/enum.service';
+import { OrderService } from 'src/app/services/order/order.service';
 
 @Component({
 	selector: 'app-active-orders',
 	templateUrl: './active-orders.component.html',
 	styleUrls: ['./active-orders.component.css'],
 })
-export class ActiveOrdersComponent implements OnInit {
-	activeOrders: OrderWithInformationAndPizzas[];
+export class ActiveOrdersComponent implements OnInit, OnDestroy {
+	orders: OrderResponse[] = [];
+	page: number = 1;
+	pageSize: number = 10;
+	collectionSize: number = 0;
 
-	constructor() {
-		this.activeOrders = [];
+	loggedInUser!: UserResponse;
 
-		for (let i = 1; i < 20; ++i) {
-			const pizzasForOrder: Pizza[] = [];
-			for (let j = 0; j < (Math.random() * 10 * i) % 8; ++j) {
-				pizzasForOrder.push(
-					new Pizza(
-						i,
-						'Margherita',
-						'Paradicsomszósz, Mozzarella sajt, Paradicsom karika, Bazsalikom',
-						'assets/margherita.jpg',
-						2000
-					)
-				);
-			}
+	subscriptionList: Subscription[] = [];
 
-			this.activeOrders.push(
-				new OrderWithInformationAndPizzas(
-					this.createRandomOrder(i),
-					pizzasForOrder,
-					'Teszt Elek',
-					202663333
-				)
-			);
+	isOrdersLoading: boolean = true;
+
+	orderStatuses: OrderStatusResponse[] = [];
+
+	constructor(
+		private router: Router,
+		private orderService: OrderService,
+		private enumService: EnumService,
+		private userDetailsStorageService: UserDetailsStorageService
+	) {}
+
+	ngOnInit(): void {
+		const user = this.userDetailsStorageService.getUser();
+		if (!this.userDetailsStorageService.isUserLoggedIn() || user === null) {
+			this.router.navigate(['login']);
+			return;
 		}
+		this.loggedInUser = user;
+
+		this.getOrderStatuses();
+		this.refreshOrderPage();
 	}
 
-	ngOnInit(): void {}
+	ngOnDestroy(): void {
+		this.subscriptionList.forEach((subscription) => subscription.unsubscribe());
+	}
 
-	// TODO törölni, serviceből lekérdezni
-	private createRandomOrder(id: number): Order {
-		const currentDate: Date = new Date();
+	private getOrders(page: number, pageSize: number) {
+		this.isOrdersLoading = true;
 
-		return new Order(
-			id,
-			'2022.' +
-				('0' + (currentDate.getMonth() + 1)).slice(-2) +
-				'.' +
-				('0' + currentDate.getDate()).slice(-2) +
-				'. ' +
-				('0' + currentDate.getHours()).slice(-2) +
-				':' +
-				('0' + Math.floor((Math.random() * 100) % currentDate.getMinutes())).slice(
-					-2
-				),
-			new Address(NaN, 1116, 'Budapest', 'Csabai kapu', '78'),
-			Math.floor((Math.random() * 10000 * id) % 10000),
-			'Teljesítve'
+		this.subscriptionList.push(
+			this.orderService
+				.getOrdersPaginated(page - 1, pageSize, true, true)
+				.subscribe({
+					next: (result) => {
+						this.orders = result.content;
+						this.collectionSize = result.totalElements;
+						this.isOrdersLoading = false;
+					},
+					error: (error) => {
+						this.orders = [];
+						this.isOrdersLoading = false;
+					},
+				})
 		);
 	}
 
-	getElapsedTime(from: string): string {
-		const currentDate: Date = new Date();
+	private getOrderStatuses(): void {
+		this.subscriptionList.push(
+			this.enumService.getOrderStatuses().subscribe({
+				next: (result) => {
+					this.orderStatuses = result;
+				},
+			})
+		);
+	}
 
-		const orderDate: Date = new Date(from);
+	editStatus(index: number, orderStatusId: number) {
+		const orderToEdit = this.orders[index];
 
-		const elapsedYear = currentDate.getUTCFullYear() - orderDate.getUTCFullYear();
-		const elapsedMonth = currentDate.getUTCMonth() - orderDate.getUTCMonth();
-		const elapsedDays = currentDate.getUTCDate() - orderDate.getUTCDate();
-		const elapsedHours = currentDate.getUTCHours() - orderDate.getUTCHours();
-		const elapsedMinutes =
-			currentDate.getUTCMinutes() - orderDate.getUTCMinutes();
+		const request: OrderStatusEditRequest = {
+			id: orderToEdit.id,
+			orderStatusId: orderStatusId,
+		};
 
-		return (
-			elapsedMinutes +
-			elapsedHours * 60 +
-			elapsedDays * 24 * 60 +
-			elapsedMonth * 30 * 24 * 60 +
-			elapsedYear * 12 * 30 * 24 * 60
-		).toString();
+		this.subscriptionList.push(
+			this.orderService.editOrderStatus(request).subscribe({
+				next: (result) => {
+					if (this.isOrderStatusNameIsActive(result.orderStatusName))
+						orderToEdit.orderStatusName = result.orderStatusName;
+					else
+						this.orders = this.orders.filter((order) => order.id !== orderToEdit.id);
+				},
+			})
+		);
+	}
+
+	refreshOrderPage() {
+		this.getOrders(this.page, this.pageSize);
+	}
+
+	getElapsedMinutes(elapsedFrom: Date): number {
+		const fromObj: Date = new Date(elapsedFrom);
+		const now: Date = new Date();
+
+		const elapsedMinutes = Math.floor(
+			(now.getTime() - fromObj.getTime()) / 1000 / 60
+		);
+
+		return elapsedMinutes;
+	}
+
+	addressToString(address: AddressResponse): string {
+		return addressToString(address);
+	}
+
+	getReadableOrderStatusName(name: string): string {
+		switch (name) {
+			case 'STATUS_UNDER_PROCESS':
+				return 'Feldolgozás alatt';
+			case 'STATUS_UNDER_PREPARATION':
+				return 'Elkészítés alatt';
+			case 'STATUS_UNDER_DELIVER':
+				return 'Kiszállítás alatt';
+			case 'STATUS_COMPLETED':
+				return 'Teljesítve';
+			case 'STATUS_REVOKED':
+				return 'Visszavonva';
+			default:
+				return 'NOT_FOUND';
+		}
+	}
+
+	private isOrderStatusNameIsActive(name: string) {
+		if (name === 'STATUS_COMPLETED' || name === 'STATUS_REVOKED') return false;
+
+		return true;
 	}
 }

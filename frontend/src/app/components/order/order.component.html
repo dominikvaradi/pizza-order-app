@@ -5,59 +5,45 @@
 		</div>
 	</div>
 
-	<div class="row justify-content-center">
+	<div *ngIf="order" class="row justify-content-center">
 		<div class="col-12 col-md-10 col-xl-8">
 			<div class="table-responsive-sm">
 				<table class="table align-middle">
 					<tbody>
 						<tr>
 							<th role="row" class="text-end">Azonosító</th>
-							<td class="text-break">{{ model.order.id }}</td>
+							<td class="text-break">{{ order.id }}</td>
 						</tr>
 
 						<tr>
 							<th role="row" class="text-end">Dátum</th>
-							<td class="text-break">{{ model.order.date }}</td>
+							<td class="text-break">{{ order.createdAt | date: "YYYY. MM. dd. HH:mm" }}</td>
 						</tr>
 
 						<tr>
-							<th role="row" class="text-end">Rendelő neve</th>
-							<td class="text-break">{{ model.fullName }}</td>
-						</tr>
-
-						<tr>
-							<th role="row" class="text-end">Rendelő telefonszáma</th>
-							<td class="text-break">+36{{ model.phoneNumber }}</td>
+							<th role="row" class="text-end">Rendelő felhasználóneve</th>
+							<td class="text-break">{{ order.username }}</td>
 						</tr>
 
 						<tr>
 							<th role="row" class="text-end">Cím</th>
-							<td class="text-break">{{ model.order.address }}</td>
+							<td class="text-break">{{ addressToString(order.address) }}</td>
 						</tr>
 
 						<tr>
 							<th role="row" class="text-end">Végösszeg</th>
-							<td class="text-break">{{ model.order.total }} Ft</td>
+							<td class="text-break">{{ order.totalSum }} Ft</td>
 						</tr>
 
 						<tr>
 							<th role="row" class="text-end">Állapot</th>
-							<td class="text-break">{{ model.order.status }}</td>
+							<td class="text-break">{{ getReadableOrderStatusName(order.orderStatusName) }}</td>
 						</tr>
 					</tbody>
 				</table>
 			</div>
 		</div>
-		<div class="col-12 text-center">
-			<button type="button" href class="btn btn-primary">
-				Számla megtekintése
-			</button>
-		</div>
-	</div>
 
-	<hr />
-
-	<div class="row justify-content-center">
 		<div class="col-12 text-center">
 			<h2>Rendeléshez tartozó pizzák</h2>
 		</div>
@@ -68,18 +54,21 @@
 					<thead class="table-info">
 						<tr>
 							<th role="col" class="text-center">Név</th>
+							<th role="col">Darab</th>
 							<th role="col">Leírás</th>
-							<th role="col" class="min-width-cell text-center">Ár</th>
+							<th role="col" class="text-center">Ár</th>
 						</tr>
 					</thead>
 					<tbody>
-						<tr *ngFor="let pizza of model.pizzas">
+						<tr *ngFor="let orderItem of order.items">
 							<td class="text-center text-break mw-100px">
-								{{ pizza.name }}
+								{{ orderItem.pizza.name }}
 							</td>
-
-							<td class="text-break">{{ pizza.description }}</td>
-							<td class="min-width-cell text-center">{{ pizza.price }} Ft</td>
+							<td>{{ orderItem.amount }}</td>
+							<td class="text-break">{{ orderItem.pizza.description }}</td>
+							<td class="text-center">
+								{{ orderItem.pizza.price }} Ft
+							</td>
 						</tr>
 					</tbody>
 				</table>

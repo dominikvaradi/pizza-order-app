@@ -6,34 +6,57 @@
 	</div>
 
 	<div class="row justify-content-center">
-		<div class="col-12 col-lg-10 col-xl-9">
-			<div class="table-responsive-sm">
+		<div class="col-12 col-sm-8 col-md-6 col-lg-4">
+			<div class="input-group mb-3">
+				<input
+					type="text"
+					id="inputSearchTerm"
+					#inputSearchTerm
+					placeholder="Keresés"
+					class="form-control rounded-0 rounded-start"
+					(keyup.enter)="searchUsersByTerm(inputSearchTerm.value)"
+				/>
+				<button
+					class="btn btn-outline-secondary"
+					type="button"
+					id="button-addon2"
+					(click)="searchUsersByTerm(inputSearchTerm.value)"
+				>
+					Keresés
+				</button>
+			</div>
+		</div>
+
+		<div *ngIf="isLoading" class="col-12 text-center mt-3">
+			<div class="spinner-border text-danger" style="width: 3rem; height: 3rem">
+				<span class="visually-hidden">Betöltés...</span>
+			</div>
+		</div>
+
+		<div *ngIf="users.length > 0" class="col-12 col-lg-10 col-xl-9">
+			<div *ngIf="!isLoading" class="table-responsive">
 				<table class="table table-light table-striped table-hover">
 					<thead class="table-info">
 						<tr>
 							<th role="col" class="min-width-cell">#</th>
-							<th role="col" class="min-width-cell">Felhasználónév</th>
-							<th role="col" class="min-width-cell d-none d-md-table-cell">
-								Teljes név
-							</th>
-							<th role="col" class="d-none d-md-table-cell">E-Mail cím</th>
-							<th role="col" class="min-width-cell d-none d-lg-table-cell">
-								Telefonszám
-							</th>
-							<th role="col" class="min-width-cell">Csoport</th>
+							<th role="col" class="">Felhasználónév</th>
+							<th role="col">Teljes név</th>
+							<th role="col">E-Mail cím</th>
+							<th role="col">Telefonszám</th>
+							<th role="col" class="min-width-cell">Szerepkör</th>
 							<th role="col"></th>
 						</tr>
 					</thead>
 					<tbody>
-						<tr *ngFor="let user of visibleUsers">
+						<tr *ngFor="let user of users">
 							<th role="row" class="min-width-cell">{{ user.id }}</th>
-							<td class="text-break">{{ user.username }}</td>
-							<td class="text-break d-none d-md-table-cell">
+							<td>{{ user.username }}</td>
+							<td>
 								{{ user.fullName }}
 							</td>
-							<td class="d-none d-md-table-cell text-break">{{ user.email }}</td>
-							<td class="d-none d-lg-table-cell">{{ user.phoneNumber }}</td>
-							<td class="min-width-cell">{{ user.group }}</td>
+							<td>{{ user.email }}</td>
+							<td>{{ user.phoneNumber }}</td>
+							<td>{{ getRoleNameReadable(user.role) }}</td>
 							<td class="min-width-cell">
 								<a [routerLink]="['/user', user.id]">Részletek</a>
 							</td>
@@ -51,11 +74,15 @@
 					[directionLinks]="false"
 					[ellipses]="false"
 					[boundaryLinks]="true"
-					[pageSize]="userCountPerPage"
+					[pageSize]="pageSize"
 					(pageChange)="refreshUsers()"
 				>
 				</ngb-pagination>
 			</div>
+		</div>
+
+		<div *ngIf="!isLoading && users.length === 0" class="col-12 text-center">
+			<p>Nem található egyetlen felhasználó sem.</p>
 		</div>
 	</div>
 </div>

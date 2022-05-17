@@ -3,200 +3,219 @@
 		<div class="col-12 text-center">
 			<h1 class="display-1">Felhasználó</h1>
 		</div>
+
+		<div *ngIf="isUserLoading" class="col-12 text-center mt-3">
+			<div class="spinner-border text-danger" style="width: 3rem; height: 3rem">
+				<span class="visually-hidden">Betöltés...</span>
+			</div>
+		</div>
 	</div>
 
-	<div class="row justify-content-center">
-		<div class="col-12 col-md-10 col-lg-8 col-xl-7 col-xxl-6">
-			<div class="table-responsive-sm">
-				<table class="table align-middle">
-					<tbody>
-						<tr>
-							<th role="row" class="min-width-cell text-end">Azonosító</th>
-							<td class="text-break">{{ model.id }}</td>
-							<td></td>
-						</tr>
-						<tr>
-							<th role="row" class="min-width-cell text-end">Felhasználónév</th>
-							<td class="text-break">{{ model.username }}</td>
-							<td></td>
-						</tr>
-						<tr>
-							<th role="row" class="min-width-cell text-end">Teljes név</th>
-							<td class="text-break">{{ model.fullName }}</td>
-							<td class="min-width-cell text-end">
-								<button
-									type="button"
-									class="btn btn-sm btn-warning"
-									(click)="
-										openEditUserModal(
-											'fullName',
-											'Teljes név',
-											model.fullName,
-											customValidators.fullNameValidator
-										)
-									"
+	<div *ngIf="detailedUser && !isUserLoading">
+		<div class="row justify-content-center">
+			<div class="col-12 col-md-10 col-lg-8 col-xl-7 col-xxl-6">
+				<div class="table-responsive-sm">
+					<table class="table align-middle">
+						<tbody>
+							<tr>
+								<th role="row" class="min-width-cell text-end">Azonosító</th>
+								<td class="text-break">{{ detailedUser.id }}</td>
+								<td></td>
+							</tr>
+							<tr>
+								<th role="row" class="min-width-cell text-end">Felhasználónév</th>
+								<td class="text-break">{{ detailedUser.username }}</td>
+								<td
+									*ngIf="isLoggedInUserAdmin(); else emptyCell"
+									class="min-width-cell text-end"
 								>
-									<fa-icon [icon]="faPenToSquareIcon"></fa-icon
-									><span class="d-none d-sm-inline-block">&#160;Módosítás</span>
-								</button>
-							</td>
-						</tr>
-						<tr>
-							<th role="row" class="min-width-cell text-end">E-Mail cím</th>
-							<td class="text-break">
-								{{ model.email }}
-							</td>
-							<td class="min-width-cell text-end">
-								<button
-									type="button"
-									class="btn btn-sm btn-warning"
-									(click)="
-										openEditUserModal(
-											'email',
-											'E-Mail cím',
-											model.email,
-											customValidators.emailValidator
-										)
-									"
-								>
-									<fa-icon [icon]="faPenToSquareIcon"></fa-icon
-									><span class="d-none d-sm-inline-block">&#160;Módosítás</span>
-								</button>
-							</td>
-						</tr>
-						<tr>
-							<th role="row" class="min-width-cell text-end">Telefonszám</th>
-							<td class="text-break">+36{{ model.phoneNumber }}</td>
-							<td class="min-width-cell text-end">
-								<button
-									type="button"
-									class="btn btn-sm btn-warning"
-									(click)="
-										openEditUserModal(
-											'phoneNumber',
-											'Telefonszám',
-											model.phoneNumber + '',
-											customValidators.phoneNumberValidator,
-											'number'
-										)
-									"
-								>
-									<fa-icon [icon]="faPenToSquareIcon"></fa-icon
-									><span class="d-none d-sm-inline-block">&#160;Módosítás</span>
-								</button>
-							</td>
-						</tr>
-						<tr>
-							<th role="row" class="min-width-cell text-end">Csoport</th>
-							<td class="text-break">{{ model.group }}</td>
-							<td class="min-width-cell text-end">
-								<div ngbDropdown class="d-inline-block">
 									<button
 										type="button"
 										class="btn btn-sm btn-warning"
-										id="dropdownChangeGroup"
-										ngbDropdownToggle
+										(click)="openEditValueModal('Felhasználónév', detailedUser.username)"
 									>
-										<fa-icon [icon]="faPenToSquareIcon"></fa-icon
+										<fa-icon [icon]="['far', 'pen-to-square']"></fa-icon
 										><span class="d-none d-sm-inline-block">&#160;Módosítás</span>
 									</button>
-
-									<div ngbDropdownMenu aria-labelledby="dropdownChangeGroup">
+								</td>
+							</tr>
+							<tr>
+								<th role="row" class="min-width-cell text-end">Teljes név</th>
+								<td class="text-break">{{ detailedUser.fullName }}</td>
+								<td class="min-width-cell text-end">
+									<button
+										type="button"
+										class="btn btn-sm btn-warning"
+										(click)="openEditValueModal('Teljes Név', detailedUser.fullName)"
+									>
+										<fa-icon [icon]="['far', 'pen-to-square']"></fa-icon
+										><span class="d-none d-sm-inline-block">&#160;Módosítás</span>
+									</button>
+								</td>
+							</tr>
+							<tr>
+								<th role="row" class="min-width-cell text-end">E-Mail cím</th>
+								<td class="text-break">
+									{{ detailedUser.email }}
+								</td>
+								<td class="min-width-cell text-end">
+									<button
+										type="button"
+										class="btn btn-sm btn-warning"
+										(click)="openEditValueModal('E-Mail cím', detailedUser.email)"
+									>
+										<fa-icon [icon]="['far', 'pen-to-square']"></fa-icon
+										><span class="d-none d-sm-inline-block">&#160;Módosítás</span>
+									</button>
+								</td>
+							</tr>
+							<tr>
+								<th role="row" class="min-width-cell text-end">Telefonszám</th>
+								<td class="text-break">{{ detailedUser.phoneNumber }}</td>
+								<td class="min-width-cell text-end">
+									<button
+										type="button"
+										class="btn btn-sm btn-warning"
+										(click)="
+											openEditValueModal(
+												'Telefonszám',
+												detailedUser.phoneNumber.slice(3),
+												'+36'
+											)
+										"
+									>
+										<fa-icon [icon]="['far', 'pen-to-square']"></fa-icon
+										><span class="d-none d-sm-inline-block">&#160;Módosítás</span>
+									</button>
+								</td>
+							</tr>
+							<tr>
+								<th role="row" class="min-width-cell text-end">Szerepkör</th>
+								<td class="text-break">{{ getRoleNameReadable(detailedUser.role) }}</td>
+								<td
+									*ngIf="isLoggedInUserAdmin(); else emptyCell"
+									class="min-width-cell text-end"
+								>
+									<div ngbDropdown class="d-inline-block">
 										<button
-											*ngFor="let group of groups"
-											(click)="changeGroup(group.id)"
-											ngbDropdownItem
+											type="button"
+											class="btn btn-sm btn-warning"
+											id="dropdownChangeRole"
+											ngbDropdownToggle
 										>
-											{{ group.name }}
+											<fa-icon [icon]="['far', 'pen-to-square']"></fa-icon
+											><span class="d-none d-sm-inline-block">&#160;Módosítás</span>
 										</button>
+
+										<div ngbDropdownMenu aria-labelledby="dropdownChangeRole">
+											<button
+												*ngFor="let role of roles"
+												(click)="changeRole(role.name)"
+												ngbDropdownItem
+											>
+												{{ getRoleNameReadable(role.name) }}
+											</button>
+										</div>
 									</div>
-								</div>
-							</td>
-						</tr>
-					</tbody>
-				</table>
+								</td>
+								<ng-template #emptyCell>
+									<td></td>
+								</ng-template>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+
+			<div class="col-12 text-center mb-2">
+				<button
+					type="button"
+					class="btn btn-warning"
+					(click)="openEditValueModal('Jelszó', '', undefined, true, true)"
+				>
+					<fa-icon [icon]="['far', 'pen-to-square']"></fa-icon> Jelszó módosítása
+				</button>
+			</div>
+
+			<div *ngIf="isLoggedInUserAdmin() && loggedInUser.id !== detailedUser.id" class="col-12 text-center">
+				<button (click)="deleteUser()" type="button" class="btn btn-danger">
+					<fa-icon [icon]="['fas', 'trash']"></fa-icon> Felhasználó törlése
+				</button>
 			</div>
 		</div>
 
-		<div class="col-12 text-center mb-2">
-			<button
-				type="button"
-				class="btn btn-warning"
-				(click)="
-					openEditUserModal(
-						'password',
-						'Új jelszó',
-						'',
-						customValidators.passwordValidator,
-						'password',
-						true
-					)
-				"
-			>
-				<fa-icon [icon]="faPenToSquareIcon"></fa-icon> Jelszó módosítása
-			</button>
-		</div>
+		<div *ngIf="!isLoggedInUserAdmin() || loggedInUser.id == detailedUser?.id">
+			<hr />
 
-		<div class="col-12 text-center">
-			<button (click)="deleteUser()" type="button" class="btn btn-danger">
-				<fa-icon [icon]="faTrashIcon"></fa-icon> Felhasználó törlése
-			</button>
-		</div>
-	</div>
+			<div class="row justify-content-center">
+				<div class="col-12 text-center">
+					<h2>Címek</h2>
+				</div>
 
-	<hr />
+				<div class="col-12 col-lg-10">
+					<button
+						*ngIf="addresses.length < 5"
+						type="button"
+						class="btn btn-primary mb-3"
+						(click)="openSaveAddressModal()"
+					>
+						Új cím felvétele
+					</button>
 
-	<div class="row justify-content-center">
-		<div class="col-12 text-center">
-			<h2>Címek</h2>
-		</div>
+					<div *ngIf="isAddressesLoading" class="col-12 text-center mt-3">
+						<div class="spinner-border text-danger" style="width: 3rem; height: 3rem">
+							<span class="visually-hidden">Betöltés...</span>
+						</div>
+					</div>
+					<div *ngIf="!isAddressesLoading">
+						<div
+							*ngIf="addresses.length > 0; else noAddresses"
+							class="table-responsive-sm"
+						>
+							<table class="table table-light table-sm table-striped align-middle">
+								<thead class="table-info">
+									<tr>
+										<th role="col" class="text-center min-width-cell">#</th>
+										<th role="col">Cím</th>
+										<th role="col" class="text-center min-width-cell">Műveletek</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr *ngFor="let address of addresses; let idx = index">
+										<th role="row" class="text-center min-width-cell">
+											{{ address.id }}
+										</th>
+										<td class="text-break">
+											{{ addressToString(address) }}
+										</td>
+										<td class="text-center min-width-cell">
+											<button
+												type="button"
+												class="btn btn-sm btn-warning me-2"
+												(click)="openSaveAddressModal(idx)"
+											>
+												<fa-icon [icon]="['far', 'pen-to-square']"></fa-icon>
+												<span class="d-none d-sm-inline-block">&#160;Módosítás</span>
+											</button>
 
-		<div class="col-12 col-lg-10">
-			<button
-				type="button"
-				class="btn btn-primary mb-3"
-				(click)="openEditAddressModal()"
-			>
-				Új cím felvétele
-			</button>
-
-			<div class="table-responsive-sm">
-				<table class="table table-light table-sm table-striped align-middle">
-					<thead class="table-info">
-						<tr>
-							<th role="col" class="text-center min-width-cell">#</th>
-							<th role="col">Cím</th>
-							<th role="col" class="text-center min-width-cell">Műveletek</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr *ngFor="let address of addresses; let i = index">
-							<th role="row" class="text-center min-width-cell">{{ address.id }}</th>
-							<td class="text-break">
-								{{ address }}
-							</td>
-							<td class="text-center min-width-cell">
-								<button
-									type="button"
-									class="btn btn-sm btn-warning me-2"
-									(click)="openEditAddressModal(i)"
-								>
-									<fa-icon [icon]="faPenToSquareIcon"></fa-icon>
-									<span class="d-none d-sm-inline-block">&#160;Módosítás</span>
-								</button>
-
-								<button
-									type="button"
-									class="btn btn-sm btn-danger"
-									(click)="deleteAddress(address.id)"
-								>
-									<fa-icon [icon]="faTrashIcon"></fa-icon>
-									<span class="d-none d-sm-inline-block">&#160;Törlés</span>
-								</button>
-							</td>
-						</tr>
-					</tbody>
-				</table>
+											<button
+												type="button"
+												class="btn btn-sm btn-danger"
+												(click)="deleteAddress(address.id)"
+											>
+												<fa-icon [icon]="['fas', 'trash']"></fa-icon>
+												<span class="d-none d-sm-inline-block">&#160;Törlés</span>
+											</button>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+						<ng-template #noAddresses>
+							<p class="text-center">Nem található egyetlen cím sem.</p>
+						</ng-template>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>

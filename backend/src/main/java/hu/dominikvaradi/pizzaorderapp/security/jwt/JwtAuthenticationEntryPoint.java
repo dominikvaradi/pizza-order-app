@@ -1,5 +1,7 @@
 package hu.dominikvaradi.pizzaorderapp.security.jwt;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import hu.dominikvaradi.pizzaorderapp.data.dto.MessageResponseDTO;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,8 @@ import java.io.IOException;
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException {
-        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Error: Unauthorized");
+        MessageResponseDTO responseObject = new MessageResponseDTO("Error: Unauthorized!");
+        ObjectMapper mapper = new ObjectMapper();
+        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, mapper.writeValueAsString(responseObject));
     }
 }

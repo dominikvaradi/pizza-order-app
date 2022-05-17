@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { Address } from 'src/app/models/Address';
-import { Order } from 'src/app/models/Order';
-import { OrderWithInformationAndPizzas } from 'src/app/models/OrderWithInformationAndPizzas';
-import { Pizza } from 'src/app/models/Pizza';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { AddressResponse, addressToString } from 'src/app/models/AddressResponse';
+import { OrderResponse } from 'src/app/models/OrderResponse';
+import { OrderService } from 'src/app/services/order/order.service';
 
 @Component({
 	selector: 'app-order',
@@ -10,42 +11,69 @@ import { Pizza } from 'src/app/models/Pizza';
 	styleUrls: ['./order.component.css'],
 })
 export class OrderComponent implements OnInit {
-	model: OrderWithInformationAndPizzas = new OrderWithInformationAndPizzas(
-		new Order(
-			1,
-			'2022.03.29. 17:00',
-			new Address(1, 1116, 'Budapest', 'Csabai kapu', '78'),
-			6000,
-			'Teljesítve'
-		),
-		[
-			new Pizza(
-				1,
-				'Margherita',
-				'Paradicsomszósz, Mozzarella sajt, Paradicsom karika, Bazsalikom',
-				'assets/margherita.jpg',
-				2000
-			),
-			new Pizza(
-				2,
-				'Margherita',
-				'Paradicsomszósz, Mozzarella sajt, Paradicsom karika, Bazsalikom',
-				'assets/margherita.jpg',
-				2000
-			),
-			new Pizza(
-				3,
-				'Margherita',
-				'Paradicsomszósz, Mozzarella sajt, Paradicsom karika, Bazsalikom',
-				'assets/margherita.jpg',
-				2000
-			),
-		],
-		'Teszt Elek Béla',
-		202653353
-	);
+	order: OrderResponse | null = null;
 
-	constructor() {}
+	subscriptionList: Subscription[] = [];
 
-	ngOnInit(): void {}
+	isOrderLoading: boolean = true;
+
+	constructor(
+		private router: Router,
+		private activatedRoute: ActivatedRoute,
+		private orderService: OrderService
+	) {}
+
+	ngOnInit(): void {
+		this.subscriptionList.push(
+			this.activatedRoute.paramMap.subscribe((paramMap) => {
+				const orderId = parseInt(paramMap.get('orderId') ?? '');
+
+				if (isNaN(orderId)) {
+					this.router.navigate(['not-found']);
+					return;
+				}
+
+				this.getOrder(orderId);
+			})
+		);
+	}
+
+	getOrder(id: number) {
+		this.subscriptionList.push(
+			this.orderService
+				.getOrderById(id, true)
+				.subscribe({
+					next: (result) => {
+						this.order = result;
+						this.isOrderLoading = false;
+					},
+					error: (error) => {
+						this.isOrderLoading = false;
+						this.router.navigate(['not-found']);
+						return;
+					},
+				})
+		);
+	}
+
+	getReadableOrderStatusName(name: string): string {
+		switch (name) {
+			case 'STATUS_UNDER_PROCESS':
+				return 'Feldolgozás alatt';
+			case 'STATUS_UNDER_PREPARATION':
+				return 'Elkészítés alatt';
+			case 'STATUS_UNDER_DELIVER':
+				return 'Kiszállítás alatt';
+			case 'STATUS_COMPLETED':
+				return 'Teljesítve';
+			case 'STATUS_REVOKED':
+				return 'Visszavonva';
+			default:
+				return 'NOT_FOUND';
+		}
+	}
+
+	addressToString(address: AddressResponse): string {
+		return addressToString(address);
+	}
 }
