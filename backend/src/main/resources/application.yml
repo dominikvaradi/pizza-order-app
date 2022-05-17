@@ -7,7 +7,7 @@ spring:
   jpa:
     show-sql: true
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: true
@@ -24,11 +24,8 @@ app:
     tokenHeaderKey: Authorization
     tokenPrefixName: Bearer
     secret: UGl6emFPcmRlckFwcFRlc3RTZWNyZXRGb3JKV1RBdXRoZW50aWNhdGlvbg==
-    #tokenExpirationInMillis: 86400000 # 1 day
-    #refreshTokenExpirationInMillis: 259200000 # 3 day
-    ## Test
-    tokenExpirationInMillis: 30000 # half minute
-    refreshTokenExpirationInMillis: 300000 # 5 minute
+    tokenExpirationInMillis: 43200000 # half day
+    refreshTokenExpirationInMillis: 172800000 # 2 day
 
 server:
   address: 0.0.0.0
